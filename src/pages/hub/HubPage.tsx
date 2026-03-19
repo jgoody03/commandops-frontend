@@ -8,13 +8,14 @@ import TodayActivityGrid from "@/features/hub/components/TodayActivityGrid";
 import LowStockPanel from "@/features/hub/components/LowStockPanel";
 import RecentActivityList from "@/features/activity/components/RecentActivityList";
 import LocationSummaryPanel from "@/features/locations/components/LocationSummaryPanel";
-
+import { useReplenishmentRecommendations } from "@/features/hub/hooks/useReplenishmentRecommendations";
+import ReplenishmentPanel from "@/features/hub/components/ReplenishmentPanel";
 export default function HubPage() {
   const { workspaceId } = useWorkspaceContext();
   const snapshot = useTodaySnapshot(workspaceId);
   const lowStock = useLowStockProducts({ initialLimit: 10 });
   const locations = useLocationSummaryList({ initialLimit: 8 });
-
+const replenishment = useReplenishmentRecommendations({ limit: 6 });
   return (
     <div className="space-y-6">
       <TodayStatsGrid
@@ -58,6 +59,11 @@ export default function HubPage() {
         loading={snapshot.loading}
         error={snapshot.error}
       />
+      <ReplenishmentPanel
+  data={replenishment.data}
+  loading={replenishment.loading}
+  error={replenishment.error}
+/>
     </div>
   );
 }
