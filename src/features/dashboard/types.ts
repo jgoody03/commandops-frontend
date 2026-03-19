@@ -3,8 +3,22 @@ export type GetTodaySnapshotRequest = {
 };
 
 export type TodaySnapshot = {
-  totalProducts: number;
-  totalLocations: number;
-  totalUnits: number;
-  lowStockCount: number;
+  totals: {
+    totalProducts: number;
+    totalLocations: number;
+    totalUnits: number;
+    lowStockProducts: number;
+    outOfStockProducts: number;
+  };
+  activity: {
+    receiveCount: number;
+    moveCount: number;
+    adjustCount: number;
+    scanCount: number;
+    quickCreateCount: number;
+    saleCount: number;
+    totalCount: number;
+  };
+  recentActivity: unknown[];
+  generatedAtMs: number;
 };
