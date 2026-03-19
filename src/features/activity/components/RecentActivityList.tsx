@@ -25,8 +25,14 @@ export default function RecentActivityList({ data, loading, error }: Props) {
     );
   }
 
-  if (!data) return null;
-
+if (!data) {
+  return (
+    <div className="rounded-xl bg-white p-4 shadow">
+      <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
+      <p className="mt-2 text-sm text-slate-500">No recent activity available yet.</p>
+    </div>
+  );
+}
   if (!data.recentActivity.length) {
     return (
       <div className="rounded-xl bg-white p-4 shadow">

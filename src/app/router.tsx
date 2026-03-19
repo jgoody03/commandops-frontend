@@ -1,7 +1,7 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import NotFoundPage from "../pages/NotFoundPage";
-import HubDashboardPage from "../pages/hub/HubDashboardPage";
+import HubPage from "../pages/hub/HubPage";
 import OpsHomePage from "../pages/ops/OpsHomePage";
 import ViewHomePage from "../pages/view/ViewHomePage";
 import { AuthGate } from "../features/auth/AuthGate";
@@ -13,19 +13,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
+    element: <Navigate to="/hub" replace />,
+  },
+  {
+    path: "/hub",
     element: (
       <AuthGate>
-        <HubDashboardPage />
+        <HubPage />
       </AuthGate>
     ),
   },
   {
     path: "/hub/dashboard",
-    element: (
-      <AuthGate>
-        <HubDashboardPage />
-      </AuthGate>
-    ),
+    element: <Navigate to="/hub" replace />,
   },
   {
     path: "/ops",

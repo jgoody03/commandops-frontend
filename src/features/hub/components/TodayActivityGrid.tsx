@@ -19,8 +19,13 @@ export default function TodayActivityGrid({ data, loading, error }: Props) {
     );
   }
 
-  if (!data) return null;
-
+if (!data) {
+  return (
+    <div className="rounded-xl bg-white p-4 shadow">
+      No activity data available yet.
+    </div>
+  );
+}
   const { activity } = data;
 
   return (
