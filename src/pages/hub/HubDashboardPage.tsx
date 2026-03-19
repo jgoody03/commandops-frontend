@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PageShell } from "../../components/layout/PageShell";
 import { Card } from "../../components/ui/Card";
 import { LoadingState } from "../../components/ui/LoadingState";
-import { useTodaySnapshot } from "../../features/dashboard/hooks";
+import { useTodaySnapshot } from "../../features/hub/hooks";
 import { bootstrapWorkspace } from "../../features/workspace/bootstrap";
 import { useMyWorkspaceContext } from "../../features/workspace/hooks";
 import { seedDemoData } from "../../features/dev/seed";

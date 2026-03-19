@@ -15,6 +15,5 @@ const bootstrapWorkspaceFn = callFunction<
 >("bootstrapWorkspace");
 
 export async function bootstrapWorkspace(input: BootstrapWorkspaceRequest) {
-  const result = await bootstrapWorkspaceFn(input);
-  return result.data;
+  return bootstrapWorkspaceFn(input);
 }

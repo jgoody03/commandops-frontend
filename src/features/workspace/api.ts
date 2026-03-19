@@ -5,7 +5,6 @@ const getMyWorkspaceContextFn = callFunction<void, WorkspaceContext>(
   "getMyWorkspaceContext"
 );
 
-export async function getMyWorkspaceContext(): Promise<WorkspaceContext> {
-  const result = await getMyWorkspaceContextFn();
-  return result.data;
+export async function getMyWorkspaceContext() {
+  return getMyWorkspaceContextFn();
 }

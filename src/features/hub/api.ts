@@ -5,9 +5,6 @@ const getTodaySnapshotFn = callFunction<GetTodaySnapshotRequest, TodaySnapshot>(
   "getTodaySnapshot"
 );
 
-export async function getTodaySnapshot(
-  input: GetTodaySnapshotRequest
-): Promise<TodaySnapshot> {
-  const result = await getTodaySnapshotFn(input);
-  return result.data;
+export async function getTodaySnapshot(input: GetTodaySnapshotRequest) {
+  return getTodaySnapshotFn(input);
 }
