@@ -1,19 +1,42 @@
 import { createCallable } from "@/lib/functions";
 
-export type GetLowStockProductsInput = {
-  workspaceId: string;
+export type SummaryListCursor = {
+  updatedAtMs: number;
+  docId: string;
 };
 
-export type LowStockProduct = {
+export type GetLowStockProductsInput = {
+  workspaceId: string;
+  limit?: number;
+  cursor?: SummaryListCursor | null;
+  query?: string;
+  outOnly?: boolean;
+};
+
+export type ProductSummaryListItem = {
+  id: string;
+  workspaceId: string;
   productId: string;
+  sku: string;
   name: string;
-  sku?: string;
-  onHand: number;
-  reorderPoint?: number;
+  primaryBarcode: string | null;
+  unit: string | null;
+  totalOnHand: number;
+  totalAvailable: number;
+  totalLocations: number;
+  locationsInStock: number;
+  locationsOutOfStock: number;
+  locationsLowStock: number;
+  isOutOfStockEverywhere: boolean;
+  isLowStockAnywhere: boolean;
+  stockStatus: string;
+  lastTransactionAtMs: number | null;
+  updatedAtMs: number | null;
 };
 
 export type GetLowStockProductsOutput = {
-  items: LowStockProduct[];
+  items: ProductSummaryListItem[];
+  nextCursor: SummaryListCursor | null;
 };
 
 export const getLowStockProducts = createCallable<
