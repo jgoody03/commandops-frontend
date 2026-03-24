@@ -85,6 +85,25 @@ export type MoveInventoryResponse = {
   targetLocationId: string;
 };
 
+export type AdjustInventoryRequest = {
+  workspaceId: string;
+  locationId: string;
+  note?: string;
+  lines: Array<{
+    productId: string;
+    quantityDelta: number;
+    barcode?: string;
+    note?: string;
+  }>;
+};
+
+export type AdjustInventoryResponse = {
+  ok: boolean;
+  transactionId?: string;
+  postedAt?: string;
+  lineCount?: number;
+};
+
 export type ReceiveFlowStatus =
   | "idle"
   | "resolving"

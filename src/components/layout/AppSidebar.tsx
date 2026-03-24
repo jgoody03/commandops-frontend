@@ -4,6 +4,7 @@ import {
   Eye,
   LayoutDashboard,
   PackagePlus,
+  SlidersHorizontal,
   Smartphone,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -28,6 +29,11 @@ const navItems = [
     to: "/ops/move",
     label: "Move",
     icon: ArrowRightLeft,
+  },
+    {
+    to: "/ops/adjust",
+    label: "Adjust",
+    icon: SlidersHorizontal,
   },
   {
     to: "/view",

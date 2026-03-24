@@ -7,6 +7,7 @@ import ViewHomePage from "../pages/view/ViewHomePage";
 import { AuthGate } from "../features/auth/AuthGate";
 import OpsReceivePage from "../pages/ops/OpsReceivePage";
 import OpsMovePage from "../pages/ops/OpsMovePage";
+import OpsAdjustPage from "../pages/ops/OpsAdjustPage";
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +46,14 @@ export const router = createBrowserRouter([
       </AuthGate>
     ),
   },
+  {
+  path: "/ops/adjust",
+  element: (
+    <AuthGate>
+      <OpsAdjustPage />
+    </AuthGate>
+  ),
+},
   {
   path: "/ops/move",
   element: (
