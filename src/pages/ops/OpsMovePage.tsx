@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
-import ReceiveEntryForm from "@/features/ops/components/ReceiveEntryForm";
 import ReceiveProductCard from "@/features/ops/components/ReceiveProductCard";
 import ReceiveQuickCreatePanel from "@/features/ops/components/ReceiveQuickCreatePanel";
 import ReceiveScanPanel from "@/features/ops/components/ReceiveScanPanel";
+import MoveEntryForm from "@/features/ops/components/MoveEntryForm";
 import {
+  useMoveInventory,
   useQuickCreateProduct,
-  useReceiveInventory,
   useResolveScanCode,
 } from "@/features/ops/hooks";
 import type {
@@ -31,18 +31,18 @@ function buildSuggestedSku(value: string) {
     .slice(0, 32);
 }
 
-export default function OpsReceivePage() {
+export default function OpsMovePage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
 
-const {
-  data: locationOptionsData,
-  loading: isLocationsLoading,
-  error: locationError,
-} = useLocationOptions();
+  const {
+    data: locationOptionsData,
+    loading: isLocationsLoading,
+    error: locationError,
+  } = useLocationOptions();
 
   const resolveScanMutation = useResolveScanCode();
   const quickCreateMutation = useQuickCreateProduct();
-  const receiveInventoryMutation = useReceiveInventory();
+  const moveInventoryMutation = useMoveInventory();
 
   const [status, setStatus] = useState<ReceiveFlowStatus>("idle");
   const [scanCode, setScanCode] = useState("");
@@ -55,15 +55,15 @@ const {
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-const locations: ReceiveLocationOption[] = useMemo(() => {
-  const raw = locationOptionsData?.items ?? [];
+  const locations: ReceiveLocationOption[] = useMemo(() => {
+    const raw = locationOptionsData?.items ?? [];
 
-  return raw.map((location) => ({
-    id: location.locationId,
-    name: location.locationName,
-    code: location.locationCode,
-  }));
-}, [locationOptionsData]);
+    return raw.map((location) => ({
+      id: location.locationId,
+      name: location.locationName,
+      code: location.locationCode,
+    }));
+  }, [locationOptionsData]);
 
   function resetFlow() {
     setStatus("idle");
@@ -74,7 +74,7 @@ const locations: ReceiveLocationOption[] = useMemo(() => {
     setSuccessMessage(null);
     resolveScanMutation.reset();
     quickCreateMutation.reset();
-    receiveInventoryMutation.reset();
+    moveInventoryMutation.reset();
   }
 
 async function handleResolve(code: string) {
@@ -86,7 +86,7 @@ async function handleResolve(code: string) {
   setShowQuickCreate(false);
   resolveScanMutation.reset();
   quickCreateMutation.reset();
-  receiveInventoryMutation.reset();
+  moveInventoryMutation.reset();
   setStatus("resolving");
 
   try {
@@ -118,60 +118,71 @@ async function handleResolve(code: string) {
     setStatus("error");
   }
 }
-  async function handleQuickCreateSubmit() {
-    if (!workspaceId || !scanCode) return;
-    if (!quickCreateForm.name.trim() || !quickCreateForm.sku.trim()) return;
 
-    setSuccessMessage(null);
-    quickCreateMutation.reset();
-    setStatus("creating");
+async function handleQuickCreateSubmit() {
+  if (!workspaceId || !scanCode) return;
+  if (!quickCreateForm.name.trim() || !quickCreateForm.sku.trim()) return;
 
-    try {
-const result = await quickCreateMutation.mutateAsync({
-  workspaceId,
-  name: quickCreateForm.name.trim(),
-  sku: quickCreateForm.sku.trim(),
-  primaryBarcode: scanCode,
-});
+  setSuccessMessage(null);
+  quickCreateMutation.reset();
+  setStatus("creating");
 
-setResolvedProduct({
-  productId: result.product.id,
-  name: result.product.name,
-  sku: result.product.sku,
-  barcode: result.product.primaryBarcode ?? scanCode,
-  unitLabel: result.product.unit ?? "each",
-});
-      setShowQuickCreate(false);
-      setStatus("ready");
-    } catch {
-      setStatus("error");
-    }
+  try {
+    const result = await quickCreateMutation.mutateAsync({
+      workspaceId,
+      name: quickCreateForm.name.trim(),
+      sku: quickCreateForm.sku.trim(),
+      primaryBarcode: scanCode,
+    });
+
+    setResolvedProduct({
+      productId: result.product.id,
+      name: result.product.name,
+      sku: result.product.sku,
+      barcode: result.product.primaryBarcode ?? scanCode,
+      unitLabel: result.product.unit ?? "each",
+    });
+
+    setShowQuickCreate(false);
+    setStatus("ready");
+  } catch {
+    setStatus("error");
   }
-
-  async function handleReceiveSubmit(input: {
-    locationId: string;
+}
+  async function handleMoveSubmit(input: {
+    sourceLocationId: string;
+    targetLocationId: string;
     quantity: number;
+    note: string;
   }) {
     if (!workspaceId || !resolvedProduct) return;
 
+    if (!resolvedProduct.productId) {
+      throw new Error("Resolved product is missing productId.");
+    }
+
     setSuccessMessage(null);
-    receiveInventoryMutation.reset();
+    moveInventoryMutation.reset();
     setStatus("posting");
 
     try {
-      await receiveInventoryMutation.mutateAsync({
+      await moveInventoryMutation.mutateAsync({
         workspaceId,
-        locationId: input.locationId,
+        sourceLocationId: input.sourceLocationId,
+        targetLocationId: input.targetLocationId,
+        note: input.note || undefined,
         lines: [
           {
             productId: resolvedProduct.productId,
             quantity: input.quantity,
+            barcode: scanCode || undefined,
+            note: input.note || undefined,
           },
         ],
       });
 
       setSuccessMessage(
-        `Received ${input.quantity} ${input.quantity === 1 ? "unit" : "units"} of ${resolvedProduct.name}.`
+        `Moved ${input.quantity} ${input.quantity === 1 ? "unit" : "units"} of ${resolvedProduct.name}.`
       );
 
       setStatus("success");
@@ -206,7 +217,7 @@ setResolvedProduct({
   const pageError =
     resolveScanMutation.error ||
     quickCreateMutation.error ||
-    receiveInventoryMutation.error ||
+    moveInventoryMutation.error ||
     locationError;
 
   const pageErrorMessage =
@@ -220,10 +231,10 @@ setResolvedProduct({
     <PageShell>
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h1 className="text-xl font-semibold text-gray-900">Ops · Receive</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Ops · Move</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Scan an item, confirm the product, choose a location, and post
-            receipt.
+            Scan an item, confirm the product, choose source and destination,
+            then post the move.
           </p>
         </div>
 
@@ -244,7 +255,7 @@ setResolvedProduct({
           onSubmit={handleResolve}
           isLoading={resolveScanMutation.isPending}
           disabled={
-            quickCreateMutation.isPending || receiveInventoryMutation.isPending
+            quickCreateMutation.isPending || moveInventoryMutation.isPending
           }
         />
 
@@ -255,14 +266,14 @@ setResolvedProduct({
               scannedCode={scanCode}
             />
 
-            <ReceiveEntryForm
+            <MoveEntryForm
               product={resolvedProduct}
               locations={locations}
               defaultLocationId={defaultLocationId}
-              onSubmit={handleReceiveSubmit}
+              onSubmit={handleMoveSubmit}
               onReset={resetFlow}
               isSubmitting={
-                receiveInventoryMutation.isPending || isLocationsLoading
+                moveInventoryMutation.isPending || isLocationsLoading
               }
             />
           </>

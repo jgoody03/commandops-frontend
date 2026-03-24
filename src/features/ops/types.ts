@@ -11,12 +11,17 @@ export type ResolveScanCodeRequest = {
   code: string;
 };
 
-export type ResolveScanCodeResponse = {
-  found: boolean;
-  code: string;
-  product?: ResolvedProductSummary | null;
-};
-
+export type ResolveScanCodeResponse =
+  | {
+      resolutionStatus: "resolved";
+      productId: string;
+      sku: string;
+      productName: string;
+    }
+  | {
+      resolutionStatus: "unresolved";
+    };
+    
 export type QuickCreateProductRequest = {
   workspaceId: string;
   name: string;
@@ -55,6 +60,29 @@ export type ReceiveLocationOption = {
   id: string;
   name: string;
   code?: string | null;
+};
+export type MoveInventoryRequest = {
+  workspaceId: string;
+  sourceLocationId: string;
+  targetLocationId: string;
+  note?: string;
+  lines: Array<{
+    productId: string;
+    quantity: number;
+    barcode?: string;
+    note?: string;
+  }>;
+};
+
+export type MoveInventoryResponse = {
+  ok: boolean;
+  relatedTransactionGroupId: string;
+  moveOutTransactionId: string;
+  moveInTransactionId: string;
+  postedAt: string;
+  lineCount: number;
+  sourceLocationId: string;
+  targetLocationId: string;
 };
 
 export type ReceiveFlowStatus =

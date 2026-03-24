@@ -1,5 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { Eye, LayoutDashboard, PackagePlus, Smartphone } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Eye,
+  LayoutDashboard,
+  PackagePlus,
+  Smartphone,
+} from "lucide-react";
 import { cn } from "../../lib/utils";
 
 const navItems = [
@@ -17,6 +23,11 @@ const navItems = [
     to: "/ops/receive",
     label: "Receive",
     icon: PackagePlus,
+  },
+  {
+    to: "/ops/move",
+    label: "Move",
+    icon: ArrowRightLeft,
   },
   {
     to: "/view",
