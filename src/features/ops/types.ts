@@ -103,6 +103,25 @@ export type AdjustInventoryResponse = {
   postedAt?: string;
   lineCount?: number;
 };
+export type CountInventoryRequest = {
+  workspaceId: string;
+  locationId: string;
+  productId: string;
+  countedQuantity: number;
+  note?: string;
+  barcode?: string;
+};
+
+export type CountInventoryResponse = {
+  ok: boolean;
+  productId: string;
+  locationId: string;
+  previousQuantity: number;
+  countedQuantity: number;
+  quantityDelta: number;
+  transactionId: string | null;
+  postedAt: string;
+};
 
 export type ReceiveFlowStatus =
   | "idle"

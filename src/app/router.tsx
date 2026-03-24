@@ -8,6 +8,7 @@ import { AuthGate } from "../features/auth/AuthGate";
 import OpsReceivePage from "../pages/ops/OpsReceivePage";
 import OpsMovePage from "../pages/ops/OpsMovePage";
 import OpsAdjustPage from "../pages/ops/OpsAdjustPage";
+import OpsCountPage from "../pages/ops/OpsCountPage";
 
 export const router = createBrowserRouter([
   {
@@ -59,6 +60,14 @@ export const router = createBrowserRouter([
   element: (
     <AuthGate>
       <OpsMovePage />
+    </AuthGate>
+  ),
+},
+{
+  path: "/ops/count",
+  element: (
+    <AuthGate>
+      <OpsCountPage />
     </AuthGate>
   ),
 },

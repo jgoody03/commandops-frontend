@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   PackagePlus,
   SlidersHorizontal,
+  ClipboardList,
   Smartphone,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -34,6 +35,11 @@ const navItems = [
     to: "/ops/adjust",
     label: "Adjust",
     icon: SlidersHorizontal,
+  },
+    {
+    to: "/ops/count",
+    label: "Count",
+    icon: ClipboardList,
   },
   {
     to: "/view",
