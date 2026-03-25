@@ -9,7 +9,9 @@ import OpsReceivePage from "../pages/ops/OpsReceivePage";
 import OpsMovePage from "../pages/ops/OpsMovePage";
 import OpsAdjustPage from "../pages/ops/OpsAdjustPage";
 import OpsCountPage from "../pages/ops/OpsCountPage";
-
+import ViewProductsPage from "../pages/view/ViewProductsPage";
+import ViewLocationInventoryPage from "../pages/view/ViewLocationInventoryPage";
+import ViewProductDetailPage from "../pages/view/ViewProductDetailPage";
 export const router = createBrowserRouter([
   {
     path: "/login",
@@ -79,6 +81,30 @@ export const router = createBrowserRouter([
       </AuthGate>
     ),
   },
+  {
+  path: "/view/products",
+  element: (
+    <AuthGate>
+      <ViewProductsPage />
+    </AuthGate>
+  ),
+},
+{
+  path: "/view/products/:productId",
+  element: (
+    <AuthGate>
+      <ViewProductDetailPage />
+    </AuthGate>
+  ),
+},
+{
+  path: "/view/locations/:locationId",
+  element: (
+    <AuthGate>
+      <ViewLocationInventoryPage />
+    </AuthGate>
+  ),
+},
   {
     path: "*",
     element: <NotFoundPage />,

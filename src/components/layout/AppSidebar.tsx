@@ -1,14 +1,14 @@
 import { NavLink } from "react-router-dom";
 import {
   ArrowRightLeft,
+  ClipboardList,
   Eye,
   LayoutDashboard,
   PackagePlus,
   SlidersHorizontal,
-  ClipboardList,
   Smartphone,
-} from "lucide-react";
-import { cn } from "../../lib/utils";
+  Boxes,
+} from "lucide-react";import { cn } from "../../lib/utils";
 
 const navItems = [
   {
@@ -31,12 +31,12 @@ const navItems = [
     label: "Move",
     icon: ArrowRightLeft,
   },
-    {
+  {
     to: "/ops/adjust",
     label: "Adjust",
     icon: SlidersHorizontal,
   },
-    {
+  {
     to: "/ops/count",
     label: "Count",
     icon: ClipboardList,
@@ -46,6 +46,12 @@ const navItems = [
     label: "View",
     icon: Eye,
   },
+  {
+    to: "/view/products",
+    label: "Products",
+    icon: Boxes,
+  },
+
 ];
 
 export function AppSidebar() {
