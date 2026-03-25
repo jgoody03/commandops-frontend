@@ -1,10 +1,27 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import ProductFilters from "@/features/view/components/ProductFilters";
 import ProductSummaryTable from "@/features/view/components/ProductSummaryTable";
 import { useProductSummaryList } from "@/features/view/hooks";
+import type { ProductStockStatus } from "@/features/view/types";
+
+function parseStockStatus(
+  value: string | null
+): ProductStockStatus | "all" {
+  if (value === "ok" || value === "low" || value === "out") {
+    return value;
+  }
+  return "all";
+}
 
 export default function ViewProductsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const queryFromUrl = searchParams.get("query") ?? "";
+  const stockStatusFromUrl = parseStockStatus(
+    searchParams.get("stockStatus")
+  );
+
   const {
     data,
     loading,
@@ -18,6 +35,8 @@ export default function ViewProductsPage() {
     hasMore,
   } = useProductSummaryList({
     initialLimit: 25,
+    initialQuery: queryFromUrl,
+    initialStockStatus: stockStatusFromUrl,
   });
 
   const errorMessage =
@@ -26,6 +45,30 @@ export default function ViewProductsPage() {
       : error
         ? "Something went wrong."
         : null;
+
+  function handleQueryChange(value: string) {
+    setQuery(value);
+
+    const next = new URLSearchParams(searchParams);
+    if (value.trim()) {
+      next.set("query", value);
+    } else {
+      next.delete("query");
+    }
+    setSearchParams(next, { replace: true });
+  }
+
+  function handleStockStatusChange(value: ProductStockStatus | "all") {
+    setStockStatus(value);
+
+    const next = new URLSearchParams(searchParams);
+    if (value === "all") {
+      next.delete("stockStatus");
+    } else {
+      next.set("stockStatus", value);
+    }
+    setSearchParams(next, { replace: true });
+  }
 
   return (
     <PageShell>
@@ -37,7 +80,10 @@ export default function ViewProductsPage() {
           </p>
 
           <div className="mt-3 flex flex-wrap gap-3 text-sm">
-            <Link to="/view" className="font-medium text-blue-600 hover:text-blue-700">
+            <Link
+              to="/view"
+              className="font-medium text-blue-600 hover:text-blue-700"
+            >
               Back to View Home
             </Link>
           </div>
@@ -45,9 +91,9 @@ export default function ViewProductsPage() {
 
         <ProductFilters
           query={query}
-          onQueryChange={setQuery}
+          onQueryChange={handleQueryChange}
           stockStatus={stockStatus}
-          onStockStatusChange={setStockStatus}
+          onStockStatusChange={handleStockStatusChange}
         />
 
         {errorMessage ? (
