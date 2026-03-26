@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { LocationSummaryListItem } from "../api/getLocationSummaryList";
 
 type Props = {
@@ -61,9 +62,10 @@ export default function LocationSummaryPanel({
         <>
           <div className="mt-4 space-y-3">
             {data.items.map((item) => (
-              <div
+              <Link
                 key={item.id}
-                className="rounded-lg border border-slate-200 px-3 py-3"
+                to={`/view/locations/${item.locationId}`}
+                className="block rounded-lg border border-slate-200 px-3 py-3 transition hover:bg-slate-50"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -94,10 +96,16 @@ export default function LocationSummaryPanel({
                   <div>Out of stock SKUs: {item.outOfStockSkuCount}</div>
                 </div>
 
-                <div className="mt-2 text-xs text-slate-400">
-                  Updated: {formatUpdatedAt(item.updatedAtMs)}
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <div className="text-xs text-slate-400">
+                    Updated: {formatUpdatedAt(item.updatedAtMs)}
+                  </div>
+
+                  <div className="text-sm font-medium text-blue-600">
+                    View inventory
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 

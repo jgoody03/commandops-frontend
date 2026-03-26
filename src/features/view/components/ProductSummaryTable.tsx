@@ -74,24 +74,46 @@ export default function ProductSummaryTable({ items }: Props) {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-col gap-2">
-                    <Link
-                      to={`/ops/receive`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                    >
-                      Receive
-                    </Link>
-                    <Link
-                      to={`/ops/move`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                    >
-                      Move
-                    </Link>
-                    <Link
-                      to={`/ops/count`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                    >
-                      Count
-                    </Link>
+<Link
+  to={`/ops/receive?productId=${item.productId}&sku=${encodeURIComponent(
+    item.sku
+  )}&name=${encodeURIComponent(item.name)}&barcode=${encodeURIComponent(
+    item.primaryBarcode ?? ""
+  )}`}
+  className="text-sm font-medium text-blue-600 hover:text-blue-700"
+>
+  Receive
+</Link>
+<Link
+  to={`/ops/move?productId=${item.productId}&sku=${encodeURIComponent(
+    item.sku
+  )}&name=${encodeURIComponent(item.name)}&barcode=${encodeURIComponent(
+    item.primaryBarcode ?? ""
+  )}`}
+  className="text-sm font-medium text-blue-600 hover:text-blue-700"
+>
+  Move
+</Link>
+<Link
+  to={`/ops/count?productId=${item.productId}&sku=${encodeURIComponent(
+    item.sku
+  )}&name=${encodeURIComponent(item.name)}&barcode=${encodeURIComponent(
+    item.primaryBarcode ?? ""
+  )}`}
+  className="text-sm font-medium text-blue-600 hover:text-blue-700"
+>
+  Count
+</Link>
+  <Link
+  to={`/ops/adjust?productId=${item.productId}&sku=${encodeURIComponent(
+    item.sku
+  )}&name=${encodeURIComponent(item.name)}&barcode=${encodeURIComponent(
+    item.primaryBarcode ?? ""
+  )}`}
+  className="text-sm font-medium text-blue-600 hover:text-blue-700"
+>
+  Adjust
+</Link>                
                   </div>
                 </td>
               </tr>

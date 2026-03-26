@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { ReplenishmentItem } from "../api/getReplenishmentRecommendations";
 
 type Props = {
@@ -16,7 +17,7 @@ function badge(item: ReplenishmentItem) {
 export default function ReplenishmentPanel({ data, loading, error }: Props) {
   return (
     <div className="rounded-xl bg-white p-4 shadow">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
             Replenishment
@@ -25,6 +26,13 @@ export default function ReplenishmentPanel({ data, loading, error }: Props) {
             Highest priority items to restock.
           </p>
         </div>
+
+        <Link
+          to="/view/products?stockStatus=low"
+          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
+          View all
+        </Link>
       </div>
 
       {loading ? (
@@ -42,15 +50,14 @@ export default function ReplenishmentPanel({ data, loading, error }: Props) {
       ) : (
         <div className="mt-4 space-y-3">
           {data.items.map((item) => (
-            <div
+            <Link
               key={item.id}
-              className="rounded-lg border border-slate-200 px-3 py-3"
+              to={`/view/products/${item.productId}`}
+              className="block rounded-lg border border-slate-200 px-3 py-3 transition hover:bg-slate-50"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="font-medium text-slate-900">
-                    {item.name}
-                  </div>
+                  <div className="font-medium text-slate-900">{item.name}</div>
                   <div className="mt-1 text-sm text-slate-500">
                     SKU: {item.sku}
                   </div>
@@ -70,7 +77,7 @@ export default function ReplenishmentPanel({ data, loading, error }: Props) {
                 <div>Low locations: {item.locationsLowStock}</div>
                 <div>Out locations: {item.locationsOutOfStock}</div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
