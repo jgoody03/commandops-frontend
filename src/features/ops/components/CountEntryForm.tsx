@@ -5,6 +5,7 @@ type Props = {
   product: ResolvedProductSummary;
   locations: ReceiveLocationOption[];
   defaultLocationId?: string;
+  preferredLocationId?: string;
   onSubmit: (input: {
     locationId: string;
     countedQuantity: number;
@@ -18,19 +19,28 @@ export default function CountEntryForm({
   product,
   locations,
   defaultLocationId,
+  preferredLocationId,
   onSubmit,
   onReset,
   isSubmitting = false,
 }: Props) {
   const initialLocationId = useMemo(() => {
     if (
+      preferredLocationId &&
+      locations.some((location) => location.id === preferredLocationId)
+    ) {
+      return preferredLocationId;
+    }
+
+    if (
       defaultLocationId &&
       locations.some((location) => location.id === defaultLocationId)
     ) {
       return defaultLocationId;
     }
+
     return locations[0]?.id ?? "";
-  }, [defaultLocationId, locations]);
+  }, [preferredLocationId, defaultLocationId, locations]);
 
   const [locationId, setLocationId] = useState(initialLocationId);
   const [countedQuantity, setCountedQuantity] = useState("");

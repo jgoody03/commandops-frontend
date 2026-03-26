@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import ReceiveEntryForm from "@/features/ops/components/ReceiveEntryForm";
 import ReceiveProductCard from "@/features/ops/components/ReceiveProductCard";
@@ -33,12 +34,13 @@ function buildSuggestedSku(value: string) {
 
 export default function OpsReceivePage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
-
-const {
-  data: locationOptionsData,
-  loading: isLocationsLoading,
-  error: locationError,
-} = useLocationOptions();
+  const [searchParams] = useSearchParams();
+  const preferredLocationId = searchParams.get("locationId") || undefined;
+  const {
+    data: locationOptionsData,
+    loading: isLocationsLoading,
+    error: locationError,
+  } = useLocationOptions();
 
   const resolveScanMutation = useResolveScanCode();
   const quickCreateMutation = useQuickCreateProduct();
@@ -55,15 +57,39 @@ const {
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-const locations: ReceiveLocationOption[] = useMemo(() => {
-  const raw = locationOptionsData?.items ?? [];
+  const locations: ReceiveLocationOption[] = useMemo(() => {
+    const raw = locationOptionsData?.items ?? [];
 
-  return raw.map((location) => ({
-    id: location.locationId,
-    name: location.locationName,
-    code: location.locationCode,
-  }));
-}, [locationOptionsData]);
+    return raw.map((location) => ({
+      id: location.locationId,
+      name: location.locationName,
+      code: location.locationCode,
+    }));
+  }, [locationOptionsData]);
+
+  useEffect(() => {
+    const productId = searchParams.get("productId");
+    const name = searchParams.get("name");
+    const sku = searchParams.get("sku");
+    const barcode = searchParams.get("barcode");
+
+    if (!productId || !name || !sku) {
+      return;
+    }
+
+    setResolvedProduct({
+      productId,
+      name,
+      sku,
+      barcode: barcode || null,
+      unitLabel: "each",
+    });
+
+    setScanCode(barcode || "");
+    setShowQuickCreate(false);
+    setSuccessMessage(null);
+    setStatus("ready");
+  }, [searchParams]);
 
   function resetFlow() {
     setStatus("idle");
@@ -77,47 +103,48 @@ const locations: ReceiveLocationOption[] = useMemo(() => {
     receiveInventoryMutation.reset();
   }
 
-async function handleResolve(code: string) {
-  if (!workspaceId) return;
+  async function handleResolve(code: string) {
+    if (!workspaceId) return;
 
-  setSuccessMessage(null);
-  setScanCode(code);
-  setResolvedProduct(null);
-  setShowQuickCreate(false);
-  resolveScanMutation.reset();
-  quickCreateMutation.reset();
-  receiveInventoryMutation.reset();
-  setStatus("resolving");
+    setSuccessMessage(null);
+    setScanCode(code);
+    setResolvedProduct(null);
+    setShowQuickCreate(false);
+    resolveScanMutation.reset();
+    quickCreateMutation.reset();
+    receiveInventoryMutation.reset();
+    setStatus("resolving");
 
-  try {
-    const result = await resolveScanMutation.mutateAsync({
-      workspaceId,
-      code,
-    });
-
-    if (result.resolutionStatus === "resolved") {
-      setResolvedProduct({
-        productId: result.productId,
-        name: result.productName,
-        sku: result.sku,
-        barcode: code,
-        unitLabel: "each",
+    try {
+      const result = await resolveScanMutation.mutateAsync({
+        workspaceId,
+        code,
       });
-      setShowQuickCreate(false);
-      setStatus("ready");
-      return;
-    }
 
-    setQuickCreateForm({
-      name: "",
-      sku: buildSuggestedSku(code),
-    });
-    setShowQuickCreate(true);
-    setStatus("resolved");
-  } catch {
-    setStatus("error");
+      if (result.resolutionStatus === "resolved") {
+        setResolvedProduct({
+          productId: result.productId,
+          name: result.productName,
+          sku: result.sku,
+          barcode: code,
+          unitLabel: "each",
+        });
+        setShowQuickCreate(false);
+        setStatus("ready");
+        return;
+      }
+
+      setQuickCreateForm({
+        name: "",
+        sku: buildSuggestedSku(code),
+      });
+      setShowQuickCreate(true);
+      setStatus("resolved");
+    } catch {
+      setStatus("error");
+    }
   }
-}
+
   async function handleQuickCreateSubmit() {
     if (!workspaceId || !scanCode) return;
     if (!quickCreateForm.name.trim() || !quickCreateForm.sku.trim()) return;
@@ -127,20 +154,21 @@ async function handleResolve(code: string) {
     setStatus("creating");
 
     try {
-const result = await quickCreateMutation.mutateAsync({
-  workspaceId,
-  name: quickCreateForm.name.trim(),
-  sku: quickCreateForm.sku.trim(),
-  primaryBarcode: scanCode,
-});
+      const result = await quickCreateMutation.mutateAsync({
+        workspaceId,
+        name: quickCreateForm.name.trim(),
+        sku: quickCreateForm.sku.trim(),
+        primaryBarcode: scanCode,
+      });
 
-setResolvedProduct({
-  productId: result.product.id,
-  name: result.product.name,
-  sku: result.product.sku,
-  barcode: result.product.primaryBarcode ?? scanCode,
-  unitLabel: result.product.unit ?? "each",
-});
+      setResolvedProduct({
+        productId: result.product.id,
+        name: result.product.name,
+        sku: result.product.sku,
+        barcode: result.product.primaryBarcode ?? scanCode,
+        unitLabel: result.product.unit ?? "each",
+      });
+
       setShowQuickCreate(false);
       setStatus("ready");
     } catch {
@@ -171,7 +199,9 @@ setResolvedProduct({
       });
 
       setSuccessMessage(
-        `Received ${input.quantity} ${input.quantity === 1 ? "unit" : "units"} of ${resolvedProduct.name}.`
+        `Received ${input.quantity} ${
+          input.quantity === 1 ? "unit" : "units"
+        } of ${resolvedProduct.name}.`
       );
 
       setStatus("success");
@@ -259,6 +289,7 @@ setResolvedProduct({
               product={resolvedProduct}
               locations={locations}
               defaultLocationId={defaultLocationId}
+              preferredLocationId={preferredLocationId}
               onSubmit={handleReceiveSubmit}
               onReset={resetFlow}
               isSubmitting={

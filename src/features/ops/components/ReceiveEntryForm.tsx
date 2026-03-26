@@ -5,7 +5,11 @@ type Props = {
   product: ResolvedProductSummary;
   locations: ReceiveLocationOption[];
   defaultLocationId?: string;
-  onSubmit: (input: { locationId: string; quantity: number }) => void | Promise<void>;
+  preferredLocationId?: string;
+  onSubmit: (input: {
+    locationId: string;
+    quantity: number;
+  }) => void | Promise<void>;
   onReset: () => void;
   isSubmitting?: boolean;
 };
@@ -14,16 +18,28 @@ export default function ReceiveEntryForm({
   product,
   locations,
   defaultLocationId,
+  preferredLocationId,
   onSubmit,
   onReset,
   isSubmitting = false,
 }: Props) {
   const initialLocationId = useMemo(() => {
-    if (defaultLocationId && locations.some((location) => location.id === defaultLocationId)) {
+    if (
+      preferredLocationId &&
+      locations.some((location) => location.id === preferredLocationId)
+    ) {
+      return preferredLocationId;
+    }
+
+    if (
+      defaultLocationId &&
+      locations.some((location) => location.id === defaultLocationId)
+    ) {
       return defaultLocationId;
     }
+
     return locations[0]?.id ?? "";
-  }, [defaultLocationId, locations]);
+  }, [preferredLocationId, defaultLocationId, locations]);
 
   const [locationId, setLocationId] = useState(initialLocationId);
   const [quantity, setQuantity] = useState("1");
@@ -40,7 +56,12 @@ export default function ReceiveEntryForm({
     event.preventDefault();
 
     const parsedQuantity = Number(quantity);
-    if (!locationId || !Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+
+    if (
+      !locationId ||
+      !Number.isFinite(parsedQuantity) ||
+      parsedQuantity <= 0
+    ) {
       return;
     }
 
@@ -59,7 +80,7 @@ export default function ReceiveEntryForm({
           Receive inventory
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Confirm quantity and target location.
+          Choose a location and confirm the quantity to receive.
         </p>
       </div>
 
@@ -82,7 +103,7 @@ export default function ReceiveEntryForm({
             disabled={!hasLocations || isSubmitting}
             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-100"
           >
-            {!hasLocations ? <option value="">No active locations</option> : null}
+            {!hasLocations ? <option value="">No locations</option> : null}
             {locations.map((location) => (
               <option key={location.id} value={location.id}>
                 {location.name}

@@ -26,48 +26,70 @@ export default function LocationInventoryTable({ items }: Props) {
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
-              <tr key={item.id} className="border-t border-gray-100 align-top">
-                <td className="px-4 py-3">
-                  <div className="font-medium text-gray-900">
-                    {item.product?.name ?? "Unknown product"}
-                  </div>
-                  <div className="text-gray-500">
-                    {item.product?.sku ?? item.productId}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-700">
-                  {item.product?.primaryBarcode ?? "—"}
-                </td>
-                <td className="px-4 py-3 text-gray-900">{item.onHand}</td>
-                <td className="px-4 py-3 text-gray-900">{item.available}</td>
-                <td className="px-4 py-3 text-gray-700">
-                  {formatDate(item.lastTransactionAtMs)}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-col gap-2">
+            {items.map((item) => {
+              const productId = item.product?.id ?? item.productId;
+              const sku = item.product?.sku ?? item.productId;
+              const name = item.product?.name ?? "Unknown product";
+              const barcode = item.product?.primaryBarcode ?? "";
+
+              const opsQuery = `productId=${productId}&sku=${encodeURIComponent(
+                sku
+              )}&name=${encodeURIComponent(name)}&barcode=${encodeURIComponent(
+                barcode
+              )}&locationId=${encodeURIComponent(item.locationId)}`;
+
+              return (
+                <tr key={item.id} className="border-t border-gray-100 align-top">
+                  <td className="px-4 py-3">
                     <Link
-                      to="/ops/move"
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      to={`/view/products/${productId}`}
+                      className="font-medium text-blue-600 hover:text-blue-700"
                     >
-                      Move
+                      {name}
                     </Link>
-                    <Link
-                      to="/ops/adjust"
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                    >
-                      Adjust
-                    </Link>
-                    <Link
-                      to="/ops/count"
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                    >
-                      Count
-                    </Link>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                    <div className="text-gray-500">{sku}</div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {item.product?.primaryBarcode ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-900">{item.onHand}</td>
+                  <td className="px-4 py-3 text-gray-900">{item.available}</td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {formatDate(item.lastTransactionAtMs)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        to={`/ops/receive?${opsQuery}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Receive
+                      </Link>
+                      <Link
+                        to={`/ops/move?${opsQuery}&sourceLocationId=${encodeURIComponent(
+                          item.locationId
+                        )}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Move
+                      </Link>
+                      <Link
+                        to={`/ops/adjust?${opsQuery}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Adjust
+                      </Link>
+                      <Link
+                        to={`/ops/count?${opsQuery}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Count
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
 
             {!items.length ? (
               <tr>

@@ -5,6 +5,8 @@ type Props = {
   product: ResolvedProductSummary;
   locations: ReceiveLocationOption[];
   defaultLocationId?: string;
+  preferredSourceLocationId?: string;
+  preferredTargetLocationId?: string;
   onSubmit: (input: {
     sourceLocationId: string;
     targetLocationId: string;
@@ -19,36 +21,90 @@ export default function MoveEntryForm({
   product,
   locations,
   defaultLocationId,
+  preferredSourceLocationId,
+  preferredTargetLocationId,
   onSubmit,
   onReset,
   isSubmitting = false,
 }: Props) {
-  const defaultTargetLocationId = useMemo(() => {
+  const resolvedDefaultLocationId = useMemo(() => {
     if (
       defaultLocationId &&
       locations.some((location) => location.id === defaultLocationId)
     ) {
       return defaultLocationId;
     }
+
     return locations[0]?.id ?? "";
   }, [defaultLocationId, locations]);
 
-  const defaultSourceLocationId = useMemo(() => {
-    const firstNonDefault = locations.find(
-      (location) => location.id !== defaultTargetLocationId
-    );
-    return firstNonDefault?.id ?? locations[0]?.id ?? "";
-  }, [locations, defaultTargetLocationId]);
+  const initialSourceLocationId = useMemo(() => {
+    if (
+      preferredSourceLocationId &&
+      locations.some((location) => location.id === preferredSourceLocationId)
+    ) {
+      return preferredSourceLocationId;
+    }
 
-  const [sourceLocationId, setSourceLocationId] = useState(defaultSourceLocationId);
-  const [targetLocationId, setTargetLocationId] = useState(defaultTargetLocationId);
+    if (
+      preferredTargetLocationId &&
+      resolvedDefaultLocationId &&
+      preferredTargetLocationId !== resolvedDefaultLocationId &&
+      locations.some((location) => location.id === resolvedDefaultLocationId)
+    ) {
+      return resolvedDefaultLocationId;
+    }
+
+    const firstNonTarget = locations.find(
+      (location) => location.id !== preferredTargetLocationId
+    );
+
+    return firstNonTarget?.id ?? locations[0]?.id ?? "";
+  }, [
+    preferredSourceLocationId,
+    preferredTargetLocationId,
+    resolvedDefaultLocationId,
+    locations,
+  ]);
+
+  const initialTargetLocationId = useMemo(() => {
+    if (
+      preferredTargetLocationId &&
+      locations.some((location) => location.id === preferredTargetLocationId)
+    ) {
+      return preferredTargetLocationId;
+    }
+
+    if (
+      preferredSourceLocationId &&
+      resolvedDefaultLocationId &&
+      preferredSourceLocationId !== resolvedDefaultLocationId &&
+      locations.some((location) => location.id === resolvedDefaultLocationId)
+    ) {
+      return resolvedDefaultLocationId;
+    }
+
+    const firstNonSource = locations.find(
+      (location) => location.id !== preferredSourceLocationId
+    );
+
+    return firstNonSource?.id ?? locations[0]?.id ?? "";
+  }, [
+    preferredTargetLocationId,
+    preferredSourceLocationId,
+    resolvedDefaultLocationId,
+    locations,
+  ]);
+
+  const [sourceLocationId, setSourceLocationId] = useState(initialSourceLocationId);
+  const [targetLocationId, setTargetLocationId] = useState(initialTargetLocationId);
   const [quantity, setQuantity] = useState("1");
   const [note, setNote] = useState("");
 
   useEffect(() => {
-    setSourceLocationId(defaultSourceLocationId);
-    setTargetLocationId(defaultTargetLocationId);
-  }, [defaultSourceLocationId, defaultTargetLocationId, product.productId]);
+    setSourceLocationId(initialSourceLocationId);
+    setTargetLocationId(initialTargetLocationId);
+  }, [initialSourceLocationId, initialTargetLocationId, product.productId]);
 
   useEffect(() => {
     setQuantity("1");

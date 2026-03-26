@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import ReceiveProductCard from "@/features/ops/components/ReceiveProductCard";
 import ReceiveQuickCreatePanel from "@/features/ops/components/ReceiveQuickCreatePanel";
@@ -33,13 +34,19 @@ function buildSuggestedSku(value: string) {
 
 export default function OpsMovePage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
+  const [searchParams] = useSearchParams();
 
   const {
     data: locationOptionsData,
     loading: isLocationsLoading,
     error: locationError,
   } = useLocationOptions();
-
+  const preferredSourceLocationId =
+    searchParams.get("sourceLocationId") ||
+    searchParams.get("locationId") ||
+    undefined;
+    const preferredTargetLocationId =
+    searchParams.get("targetLocationId") || undefined;
   const resolveScanMutation = useResolveScanCode();
   const quickCreateMutation = useQuickCreateProduct();
   const moveInventoryMutation = useMoveInventory();
@@ -65,6 +72,30 @@ export default function OpsMovePage() {
     }));
   }, [locationOptionsData]);
 
+  useEffect(() => {
+    const productId = searchParams.get("productId");
+    const name = searchParams.get("name");
+    const sku = searchParams.get("sku");
+    const barcode = searchParams.get("barcode");
+
+    if (!productId || !name || !sku) {
+      return;
+    }
+
+    setResolvedProduct({
+      productId,
+      name,
+      sku,
+      barcode: barcode || null,
+      unitLabel: "each",
+    });
+
+    setScanCode(barcode || "");
+    setShowQuickCreate(false);
+    setSuccessMessage(null);
+    setStatus("ready");
+  }, [searchParams]);
+
   function resetFlow() {
     setStatus("idle");
     setScanCode("");
@@ -77,78 +108,79 @@ export default function OpsMovePage() {
     moveInventoryMutation.reset();
   }
 
-async function handleResolve(code: string) {
-  if (!workspaceId) return;
+  async function handleResolve(code: string) {
+    if (!workspaceId) return;
 
-  setSuccessMessage(null);
-  setScanCode(code);
-  setResolvedProduct(null);
-  setShowQuickCreate(false);
-  resolveScanMutation.reset();
-  quickCreateMutation.reset();
-  moveInventoryMutation.reset();
-  setStatus("resolving");
+    setSuccessMessage(null);
+    setScanCode(code);
+    setResolvedProduct(null);
+    setShowQuickCreate(false);
+    resolveScanMutation.reset();
+    quickCreateMutation.reset();
+    moveInventoryMutation.reset();
+    setStatus("resolving");
 
-  try {
-    const result = await resolveScanMutation.mutateAsync({
-      workspaceId,
-      code,
-    });
-
-    if (result.resolutionStatus === "resolved") {
-      setResolvedProduct({
-        productId: result.productId,
-        name: result.productName,
-        sku: result.sku,
-        barcode: code,
-        unitLabel: "each",
+    try {
+      const result = await resolveScanMutation.mutateAsync({
+        workspaceId,
+        code,
       });
+
+      if (result.resolutionStatus === "resolved") {
+        setResolvedProduct({
+          productId: result.productId,
+          name: result.productName,
+          sku: result.sku,
+          barcode: code,
+          unitLabel: "each",
+        });
+        setShowQuickCreate(false);
+        setStatus("ready");
+        return;
+      }
+
+      setQuickCreateForm({
+        name: "",
+        sku: buildSuggestedSku(code),
+      });
+      setShowQuickCreate(true);
+      setStatus("resolved");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  async function handleQuickCreateSubmit() {
+    if (!workspaceId || !scanCode) return;
+    if (!quickCreateForm.name.trim() || !quickCreateForm.sku.trim()) return;
+
+    setSuccessMessage(null);
+    quickCreateMutation.reset();
+    setStatus("creating");
+
+    try {
+      const result = await quickCreateMutation.mutateAsync({
+        workspaceId,
+        name: quickCreateForm.name.trim(),
+        sku: quickCreateForm.sku.trim(),
+        primaryBarcode: scanCode,
+      });
+
+      setResolvedProduct({
+        productId: result.product.id,
+        name: result.product.name,
+        sku: result.product.sku,
+        barcode: result.product.primaryBarcode ?? scanCode,
+        unitLabel: result.product.unit ?? "each",
+      });
+
       setShowQuickCreate(false);
       setStatus("ready");
-      return;
+    } catch {
+      setStatus("error");
     }
-
-    setQuickCreateForm({
-      name: "",
-      sku: buildSuggestedSku(code),
-    });
-    setShowQuickCreate(true);
-    setStatus("resolved");
-  } catch {
-    setStatus("error");
   }
-}
 
-async function handleQuickCreateSubmit() {
-  if (!workspaceId || !scanCode) return;
-  if (!quickCreateForm.name.trim() || !quickCreateForm.sku.trim()) return;
-
-  setSuccessMessage(null);
-  quickCreateMutation.reset();
-  setStatus("creating");
-
-  try {
-    const result = await quickCreateMutation.mutateAsync({
-      workspaceId,
-      name: quickCreateForm.name.trim(),
-      sku: quickCreateForm.sku.trim(),
-      primaryBarcode: scanCode,
-    });
-
-    setResolvedProduct({
-      productId: result.product.id,
-      name: result.product.name,
-      sku: result.product.sku,
-      barcode: result.product.primaryBarcode ?? scanCode,
-      unitLabel: result.product.unit ?? "each",
-    });
-
-    setShowQuickCreate(false);
-    setStatus("ready");
-  } catch {
-    setStatus("error");
-  }
-}
   async function handleMoveSubmit(input: {
     sourceLocationId: string;
     targetLocationId: string;
@@ -182,7 +214,9 @@ async function handleQuickCreateSubmit() {
       });
 
       setSuccessMessage(
-        `Moved ${input.quantity} ${input.quantity === 1 ? "unit" : "units"} of ${resolvedProduct.name}.`
+        `Moved ${input.quantity} ${
+          input.quantity === 1 ? "unit" : "units"
+        } of ${resolvedProduct.name}.`
       );
 
       setStatus("success");
@@ -270,6 +304,8 @@ async function handleQuickCreateSubmit() {
               product={resolvedProduct}
               locations={locations}
               defaultLocationId={defaultLocationId}
+              preferredSourceLocationId={preferredSourceLocationId}
+              preferredTargetLocationId={preferredTargetLocationId}
               onSubmit={handleMoveSubmit}
               onReset={resetFlow}
               isSubmitting={

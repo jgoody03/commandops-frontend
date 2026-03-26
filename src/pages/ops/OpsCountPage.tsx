@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import CountEntryForm from "@/features/ops/components/CountEntryForm";
 import ReceiveProductCard from "@/features/ops/components/ReceiveProductCard";
@@ -33,7 +34,8 @@ function buildSuggestedSku(value: string) {
 
 export default function OpsCountPage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
-
+  const [searchParams] = useSearchParams();
+const preferredLocationId = searchParams.get("locationId") || undefined;
   const {
     data: locationOptionsData,
     loading: isLocationsLoading,
@@ -64,6 +66,30 @@ export default function OpsCountPage() {
       code: location.locationCode,
     }));
   }, [locationOptionsData]);
+
+  useEffect(() => {
+    const productId = searchParams.get("productId");
+    const name = searchParams.get("name");
+    const sku = searchParams.get("sku");
+    const barcode = searchParams.get("barcode");
+
+    if (!productId || !name || !sku) {
+      return;
+    }
+
+    setResolvedProduct({
+      productId,
+      name,
+      sku,
+      barcode: barcode || null,
+      unitLabel: "each",
+    });
+
+    setScanCode(barcode || "");
+    setShowQuickCreate(false);
+    setSuccessMessage(null);
+    setStatus("ready");
+  }, [searchParams]);
 
   function resetFlow() {
     setStatus("idle");
@@ -271,6 +297,7 @@ export default function OpsCountPage() {
               product={resolvedProduct}
               locations={locations}
               defaultLocationId={defaultLocationId}
+              
               onSubmit={handleCountSubmit}
               onReset={resetFlow}
               isSubmitting={

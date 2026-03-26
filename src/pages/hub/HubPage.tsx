@@ -11,6 +11,7 @@ import LowStockPanel from "@/features/hub/components/LowStockPanel";
 import RecentActivityList from "@/features/activity/components/RecentActivityList";
 import LocationSummaryPanel from "@/features/locations/components/LocationSummaryPanel";
 import ReplenishmentPanel from "@/features/hub/components/ReplenishmentPanel";
+import HubAssistantSummaryStrip from "@/features/hub/components/HubAssistantSummaryStrip";
 
 export default function HubPage() {
   const { workspaceId } = useWorkspaceContext();
@@ -37,7 +38,12 @@ console.log("replenishment", replenishment);
             Live operational view powered by CommandOps backend.
           </p>
         </div>
-
+        <HubAssistantSummaryStrip
+          snapshot={snapshot.data}
+          replenishment={replenishment.data}
+          lowStock={lowStock.data}
+          locations={locations.data}
+        />
         <TodayStatsGrid
           data={snapshot.data}
           loading={snapshot.loading}

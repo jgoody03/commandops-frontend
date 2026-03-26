@@ -51,68 +51,82 @@ export default function ProductLocationBreakdownTable({
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
-              <tr key={item.locationId} className="border-t border-gray-100">
-                <td className="px-4 py-3">
-                  <div className="font-medium text-gray-900">
-                    {item.locationName}
-                  </div>
-                  <div className="text-gray-500">
-                    {item.locationCode || item.locationId}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-900">{item.onHand}</td>
-                <td className="px-4 py-3 text-gray-900">{item.available}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusClasses(
-                      item.stockStatus
-                    )}`}
-                  >
-                    {item.stockStatus}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-gray-700">
-                  {formatDate(item.lastTransactionAtMs)}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-col gap-2">
-                    <Link
-                      to={`/ops/receive?productId=${productId}&sku=${encodeURIComponent(
-                        sku
-                      )}&name=${encodeURIComponent(name)}&barcode=${encodeURIComponent(
-                        barcode ?? ""
-                      )}`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                    >
-                      Receive
-                    </Link>
+            {items.map((item) => {
+              const base = `productId=${productId}&sku=${encodeURIComponent(
+                sku
+              )}&name=${encodeURIComponent(name)}&barcode=${encodeURIComponent(
+                barcode ?? ""
+              )}&locationId=${encodeURIComponent(item.locationId)}`;
 
-                    <Link
-                      to={`/ops/move?productId=${productId}&sku=${encodeURIComponent(
-                        sku
-                      )}&name=${encodeURIComponent(name)}&barcode=${encodeURIComponent(
-                        barcode ?? ""
+              return (
+                <tr key={item.locationId} className="border-t border-gray-100">
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-gray-900">
+                      {item.locationName}
+                    </div>
+                    <div className="text-gray-500">
+                      {item.locationCode || item.locationId}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-900">{item.onHand}</td>
+                  <td className="px-4 py-3 text-gray-900">{item.available}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusClasses(
+                        item.stockStatus
                       )}`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
                     >
-                      Move
-                    </Link>
+                      {item.stockStatus}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {formatDate(item.lastTransactionAtMs)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        to={`/ops/receive?${base}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Receive here
+                      </Link>
 
-                    <Link
-                      to={`/ops/count?productId=${productId}&sku=${encodeURIComponent(
-                        sku
-                      )}&name=${encodeURIComponent(name)}&barcode=${encodeURIComponent(
-                        barcode ?? ""
-                      )}`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                    >
-                      Count
-                    </Link>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      <Link
+                        to={`/ops/move?${base}&sourceLocationId=${encodeURIComponent(
+                          item.locationId
+                        )}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Move from here
+                      </Link>
+
+                      <Link
+                        to={`/ops/move?${base}&targetLocationId=${encodeURIComponent(
+                          item.locationId
+                        )}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Move to here
+                      </Link>
+
+                      <Link
+                        to={`/ops/adjust?${base}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Adjust here
+                      </Link>
+
+                      <Link
+                        to={`/ops/count?${base}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Count here
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
 
             {!items.length ? (
               <tr>
