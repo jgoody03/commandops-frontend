@@ -38,6 +38,7 @@ export default function OpsReceivePage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
   const [searchParams] = useSearchParams();
   const scanPanelRef = useRef<ReceiveScanPanelHandle | null>(null);
+
   const preferredLocationId = searchParams.get("locationId") || undefined;
 
   const {
@@ -60,10 +61,10 @@ export default function OpsReceivePage() {
     sku: "",
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [repeatMode, setRepeatMode] = useState(true);
 
   const locations: ReceiveLocationOption[] = useMemo(() => {
     const raw = locationOptionsData?.items ?? [];
-
     return raw.map((location) => ({
       id: location.locationId,
       name: location.locationName,
@@ -77,9 +78,7 @@ export default function OpsReceivePage() {
     const sku = searchParams.get("sku");
     const barcode = searchParams.get("barcode");
 
-    if (!productId || !name || !sku) {
-      return;
-    }
+    if (!productId || !name || !sku) return;
 
     setResolvedProduct({
       productId,
@@ -287,6 +286,8 @@ export default function OpsReceivePage() {
             quickCreateMutation.isPending || receiveInventoryMutation.isPending
           }
           autoFocus
+          repeatMode={repeatMode}
+          onRepeatModeChange={setRepeatMode}
         />
 
         {resolvedProduct ? (
@@ -306,6 +307,8 @@ export default function OpsReceivePage() {
               isSubmitting={
                 receiveInventoryMutation.isPending || isLocationsLoading
               }
+              repeatMode={repeatMode}
+              onRepeatModeChange={setRepeatMode}
             />
           </>
         ) : null}

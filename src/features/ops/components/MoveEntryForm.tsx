@@ -15,6 +15,8 @@ type Props = {
   }) => void | Promise<void>;
   onReset: () => void;
   isSubmitting?: boolean;
+  repeatMode?: boolean;
+  onRepeatModeChange?: (value: boolean) => void;
 };
 
 export default function MoveEntryForm({
@@ -26,6 +28,7 @@ export default function MoveEntryForm({
   onSubmit,
   onReset,
   isSubmitting = false,
+  repeatMode = false,
 }: Props) {
   const resolvedDefaultLocationId = useMemo(() => {
     if (
@@ -102,9 +105,34 @@ export default function MoveEntryForm({
   const [note, setNote] = useState("");
 
   useEffect(() => {
-    setSourceLocationId(initialSourceLocationId);
-    setTargetLocationId(initialTargetLocationId);
-  }, [initialSourceLocationId, initialTargetLocationId, product.productId]);
+    setSourceLocationId((current) => {
+      if (
+        repeatMode &&
+        current &&
+        locations.some((location) => location.id === current)
+      ) {
+        return current;
+      }
+      return initialSourceLocationId;
+    });
+
+    setTargetLocationId((current) => {
+      if (
+        repeatMode &&
+        current &&
+        locations.some((location) => location.id === current)
+      ) {
+        return current;
+      }
+      return initialTargetLocationId;
+    });
+  }, [
+    initialSourceLocationId,
+    initialTargetLocationId,
+    product.productId,
+    repeatMode,
+    locations,
+  ]);
 
   useEffect(() => {
     setQuantity("1");
@@ -126,7 +154,7 @@ export default function MoveEntryForm({
       return;
     }
 
-    onSubmit({
+    void onSubmit({
       sourceLocationId,
       targetLocationId,
       quantity: parsedQuantity,

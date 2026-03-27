@@ -13,6 +13,8 @@ type Props = {
   }) => void | Promise<void>;
   onReset: () => void;
   isSubmitting?: boolean;
+  repeatMode?: boolean;
+  onRepeatModeChange?: (value: boolean) => void;
 };
 
 export default function CountEntryForm({
@@ -23,6 +25,7 @@ export default function CountEntryForm({
   onSubmit,
   onReset,
   isSubmitting = false,
+  repeatMode = false,
 }: Props) {
   const initialLocationId = useMemo(() => {
     if (
@@ -47,8 +50,17 @@ export default function CountEntryForm({
   const [note, setNote] = useState("");
 
   useEffect(() => {
-    setLocationId(initialLocationId);
-  }, [initialLocationId, product.productId]);
+    setLocationId((current) => {
+      if (
+        repeatMode &&
+        current &&
+        locations.some((location) => location.id === current)
+      ) {
+        return current;
+      }
+      return initialLocationId;
+    });
+  }, [initialLocationId, product.productId, repeatMode, locations]);
 
   useEffect(() => {
     setCountedQuantity("");
@@ -64,7 +76,7 @@ export default function CountEntryForm({
       return;
     }
 
-    onSubmit({
+    void onSubmit({
       locationId,
       countedQuantity: parsedCount,
       note: note.trim(),

@@ -67,10 +67,10 @@ export default function OpsMovePage() {
     sku: "",
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [repeatMode, setRepeatMode] = useState(true);
 
   const locations: ReceiveLocationOption[] = useMemo(() => {
     const raw = locationOptionsData?.items ?? [];
-
     return raw.map((location) => ({
       id: location.locationId,
       name: location.locationName,
@@ -84,9 +84,7 @@ export default function OpsMovePage() {
     const sku = searchParams.get("sku");
     const barcode = searchParams.get("barcode");
 
-    if (!productId || !name || !sku) {
-      return;
-    }
+    if (!productId || !name || !sku) return;
 
     setResolvedProduct({
       productId,
@@ -200,10 +198,6 @@ export default function OpsMovePage() {
   }) {
     if (!workspaceId || !resolvedProduct) return;
 
-    if (!resolvedProduct.productId) {
-      throw new Error("Resolved product is missing productId.");
-    }
-
     setSuccessMessage(null);
     moveInventoryMutation.reset();
     setStatus("posting");
@@ -304,6 +298,8 @@ export default function OpsMovePage() {
             quickCreateMutation.isPending || moveInventoryMutation.isPending
           }
           autoFocus
+          repeatMode={repeatMode}
+          onRepeatModeChange={setRepeatMode}
         />
 
         {resolvedProduct ? (
@@ -322,6 +318,8 @@ export default function OpsMovePage() {
               onSubmit={handleMoveSubmit}
               onReset={resetFlow}
               isSubmitting={moveInventoryMutation.isPending || isLocationsLoading}
+              repeatMode={repeatMode}
+              onRepeatModeChange={setRepeatMode}
             />
           </>
         ) : null}

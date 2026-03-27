@@ -19,6 +19,8 @@ type Props = {
   isLoading?: boolean;
   disabled?: boolean;
   autoFocus?: boolean;
+  repeatMode?: boolean;
+  onRepeatModeChange?: (value: boolean) => void;
 };
 
 const ReceiveScanPanel = forwardRef<ReceiveScanPanelHandle, Props>(
@@ -29,6 +31,8 @@ const ReceiveScanPanel = forwardRef<ReceiveScanPanelHandle, Props>(
       isLoading = false,
       disabled = false,
       autoFocus = true,
+      repeatMode = false,
+      onRepeatModeChange,
     },
     ref
   ) {
@@ -114,6 +118,16 @@ const ReceiveScanPanel = forwardRef<ReceiveScanPanelHandle, Props>(
             {isLoading ? "Resolving..." : "Resolve"}
           </button>
         </form>
+
+        <label className="mt-4 flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <input
+            type="checkbox"
+            checked={repeatMode}
+            onChange={(e) => onRepeatModeChange?.(e.target.checked)}
+            disabled={disabled || isLoading}
+          />
+          Keep this workflow ready for the next scan
+        </label>
       </div>
     );
   }
