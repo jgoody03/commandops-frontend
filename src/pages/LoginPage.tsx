@@ -6,7 +6,9 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as { from?: Location })?.from?.pathname || "/";
+const from = (location.state as { from?: Location })?.from?.pathname;
+
+const redirectTo = from && from !== "/login" ? from : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +22,7 @@ export default function LoginPage() {
 
     try {
       await loginWithEmailPassword(email, password);
-      navigate(from, { replace: true });
+navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to sign in");
     } finally {

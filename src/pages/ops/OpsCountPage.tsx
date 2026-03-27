@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageShell } from "@/components/layout/PageShell";
+import { OpsShell } from "@/components/layout/OpsShell";
 import CountEntryForm from "@/features/ops/components/CountEntryForm";
 import ReceiveProductCard from "@/features/ops/components/ReceiveProductCard";
 import ReceiveQuickCreatePanel from "@/features/ops/components/ReceiveQuickCreatePanel";
-import ReceiveScanPanel from "@/features/ops/components/ReceiveScanPanel";
+import ReceiveScanPanel, {
+  type ReceiveScanPanelHandle,
+} from "@/features/ops/components/ReceiveScanPanel";
 import {
   useCountInventory,
   useQuickCreateProduct,
@@ -35,7 +37,9 @@ function buildSuggestedSku(value: string) {
 export default function OpsCountPage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
   const [searchParams] = useSearchParams();
-const preferredLocationId = searchParams.get("locationId") || undefined;
+  const scanPanelRef = useRef<ReceiveScanPanelHandle | null>(null);
+  const preferredLocationId = searchParams.get("locationId") || undefined;
+
   const {
     data: locationOptionsData,
     loading: isLocationsLoading,
@@ -101,6 +105,11 @@ const preferredLocationId = searchParams.get("locationId") || undefined;
     resolveScanMutation.reset();
     quickCreateMutation.reset();
     countInventoryMutation.reset();
+
+    window.setTimeout(() => {
+      scanPanelRef.current?.clearInput();
+      scanPanelRef.current?.focusInput();
+    }, 0);
   }
 
   async function handleResolve(code: string) {
@@ -217,6 +226,11 @@ const preferredLocationId = searchParams.get("locationId") || undefined;
       setShowQuickCreate(false);
       setQuickCreateForm({ name: "", sku: "" });
       setScanCode("");
+
+      window.setTimeout(() => {
+        scanPanelRef.current?.clearInput();
+        scanPanelRef.current?.focusInput();
+      }, 0);
     } catch {
       setStatus("error");
     }
@@ -255,16 +269,11 @@ const preferredLocationId = searchParams.get("locationId") || undefined;
         : null;
 
   return (
-    <PageShell>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h1 className="text-xl font-semibold text-gray-900">Ops · Count</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Scan an item, confirm the product, choose a location, and submit the
-            actual counted quantity.
-          </p>
-        </div>
-
+    <OpsShell
+      title="Count"
+      subtitle="Scan an item, confirm the product, choose a location, and submit the actual counted quantity."
+    >
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         {successMessage ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm">
             {successMessage}
@@ -278,12 +287,14 @@ const preferredLocationId = searchParams.get("locationId") || undefined;
         ) : null}
 
         <ReceiveScanPanel
+          ref={scanPanelRef}
           code={scanCode}
           onSubmit={handleResolve}
           isLoading={resolveScanMutation.isPending}
           disabled={
             quickCreateMutation.isPending || countInventoryMutation.isPending
           }
+          autoFocus
         />
 
         {resolvedProduct ? (
@@ -297,12 +308,10 @@ const preferredLocationId = searchParams.get("locationId") || undefined;
               product={resolvedProduct}
               locations={locations}
               defaultLocationId={defaultLocationId}
-              
+              preferredLocationId={preferredLocationId}
               onSubmit={handleCountSubmit}
               onReset={resetFlow}
-              isSubmitting={
-                countInventoryMutation.isPending || isLocationsLoading
-              }
+              isSubmitting={countInventoryMutation.isPending || isLocationsLoading}
             />
           </>
         ) : null}
@@ -327,6 +336,6 @@ const preferredLocationId = searchParams.get("locationId") || undefined;
           </div>
         </div>
       </div>
-    </PageShell>
+    </OpsShell>
   );
 }

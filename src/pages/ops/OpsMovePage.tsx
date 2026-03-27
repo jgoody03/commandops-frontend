@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageShell } from "@/components/layout/PageShell";
+import { OpsShell } from "@/components/layout/OpsShell";
 import ReceiveProductCard from "@/features/ops/components/ReceiveProductCard";
 import ReceiveQuickCreatePanel from "@/features/ops/components/ReceiveQuickCreatePanel";
-import ReceiveScanPanel from "@/features/ops/components/ReceiveScanPanel";
+import ReceiveScanPanel, {
+  type ReceiveScanPanelHandle,
+} from "@/features/ops/components/ReceiveScanPanel";
 import MoveEntryForm from "@/features/ops/components/MoveEntryForm";
 import {
   useMoveInventory,
@@ -35,18 +37,22 @@ function buildSuggestedSku(value: string) {
 export default function OpsMovePage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
   const [searchParams] = useSearchParams();
+  const scanPanelRef = useRef<ReceiveScanPanelHandle | null>(null);
+
+  const preferredSourceLocationId =
+    searchParams.get("sourceLocationId") ||
+    searchParams.get("locationId") ||
+    undefined;
+
+  const preferredTargetLocationId =
+    searchParams.get("targetLocationId") || undefined;
 
   const {
     data: locationOptionsData,
     loading: isLocationsLoading,
     error: locationError,
   } = useLocationOptions();
-  const preferredSourceLocationId =
-    searchParams.get("sourceLocationId") ||
-    searchParams.get("locationId") ||
-    undefined;
-    const preferredTargetLocationId =
-    searchParams.get("targetLocationId") || undefined;
+
   const resolveScanMutation = useResolveScanCode();
   const quickCreateMutation = useQuickCreateProduct();
   const moveInventoryMutation = useMoveInventory();
@@ -106,6 +112,11 @@ export default function OpsMovePage() {
     resolveScanMutation.reset();
     quickCreateMutation.reset();
     moveInventoryMutation.reset();
+
+    window.setTimeout(() => {
+      scanPanelRef.current?.clearInput();
+      scanPanelRef.current?.focusInput();
+    }, 0);
   }
 
   async function handleResolve(code: string) {
@@ -224,6 +235,11 @@ export default function OpsMovePage() {
       setShowQuickCreate(false);
       setQuickCreateForm({ name: "", sku: "" });
       setScanCode("");
+
+      window.setTimeout(() => {
+        scanPanelRef.current?.clearInput();
+        scanPanelRef.current?.focusInput();
+      }, 0);
     } catch {
       setStatus("error");
     }
@@ -262,16 +278,11 @@ export default function OpsMovePage() {
         : null;
 
   return (
-    <PageShell>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h1 className="text-xl font-semibold text-gray-900">Ops · Move</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Scan an item, confirm the product, choose source and destination,
-            then post the move.
-          </p>
-        </div>
-
+    <OpsShell
+      title="Move"
+      subtitle="Scan an item, confirm the product, choose source and destination, then post the move."
+    >
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         {successMessage ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm">
             {successMessage}
@@ -285,12 +296,14 @@ export default function OpsMovePage() {
         ) : null}
 
         <ReceiveScanPanel
+          ref={scanPanelRef}
           code={scanCode}
           onSubmit={handleResolve}
           isLoading={resolveScanMutation.isPending}
           disabled={
             quickCreateMutation.isPending || moveInventoryMutation.isPending
           }
+          autoFocus
         />
 
         {resolvedProduct ? (
@@ -308,9 +321,7 @@ export default function OpsMovePage() {
               preferredTargetLocationId={preferredTargetLocationId}
               onSubmit={handleMoveSubmit}
               onReset={resetFlow}
-              isSubmitting={
-                moveInventoryMutation.isPending || isLocationsLoading
-              }
+              isSubmitting={moveInventoryMutation.isPending || isLocationsLoading}
             />
           </>
         ) : null}
@@ -335,6 +346,6 @@ export default function OpsMovePage() {
           </div>
         </div>
       </div>
-    </PageShell>
+    </OpsShell>
   );
 }

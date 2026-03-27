@@ -12,16 +12,17 @@ import OpsCountPage from "../pages/ops/OpsCountPage";
 import ViewProductsPage from "../pages/view/ViewProductsPage";
 import ViewLocationInventoryPage from "../pages/view/ViewLocationInventoryPage";
 import ViewProductDetailPage from "../pages/view/ViewProductDetailPage";
+import OwnerHomePage from "../pages/owner/OwnerHomePage";
+import RoleLandingPage from "../pages/RoleLandingPage";
 export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
   },
-  {
-    path: "/",
-    element: <Navigate to="/hub" replace />,
-  },
-  {
+{
+  path: "/",
+  element: <RoleLandingPage />,
+},  {
     path: "/hub",
     element: (
       <AuthGate>
@@ -33,6 +34,14 @@ export const router = createBrowserRouter([
     path: "/hub/dashboard",
     element: <Navigate to="/hub" replace />,
   },
+  {
+  path: "/owner",
+  element: (
+    <AuthGate>
+      <OwnerHomePage />
+    </AuthGate>
+  ),
+},
   {
     path: "/ops",
     element: (

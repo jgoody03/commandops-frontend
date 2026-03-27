@@ -1,9 +1,8 @@
-import { callFunction } from "../../lib/functions";
-import type { WorkspaceContext } from "./types";
+import { callFunction } from "@/lib/functions";
+import type { GetMyWorkspaceContextResponse } from "./types";
 
-const getMyWorkspaceContextFn = callFunction<void, WorkspaceContext>(
-  "getMyWorkspaceContext"
-);
+const getMyWorkspaceContextFn =
+  callFunction<void, GetMyWorkspaceContextResponse>("getMyWorkspaceContext");
 
 export async function getMyWorkspaceContext() {
   return getMyWorkspaceContextFn();

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { getMyWorkspaceContext } from "../api";
+import type { WorkspaceRole } from "../types";
 
 export type WorkspaceContextValue = {
   workspaceId: string;
   memberId?: string;
   defaultLocationId?: string;
+  role?: WorkspaceRole;
 };
 
 export function useWorkspaceContext(): WorkspaceContextValue {
@@ -13,17 +15,19 @@ export function useWorkspaceContext(): WorkspaceContextValue {
   const [defaultLocationId, setDefaultLocationId] = useState<string | undefined>(
     undefined
   );
+  const [role, setRole] = useState<WorkspaceRole | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
 
     getMyWorkspaceContext()
-      .then((result: any) => {
+      .then((result) => {
         if (cancelled) return;
 
         setWorkspaceId(result?.workspaceId ?? "");
         setMemberId(result?.memberId ?? undefined);
         setDefaultLocationId(result?.defaultLocationId ?? undefined);
+        setRole(result?.role ?? undefined);
       })
       .catch(() => {
         if (cancelled) return;
@@ -31,6 +35,7 @@ export function useWorkspaceContext(): WorkspaceContextValue {
         setWorkspaceId("");
         setMemberId(undefined);
         setDefaultLocationId(undefined);
+        setRole(undefined);
       });
 
     return () => {
@@ -43,7 +48,8 @@ export function useWorkspaceContext(): WorkspaceContextValue {
       workspaceId,
       memberId,
       defaultLocationId,
+      role,
     }),
-    [workspaceId, memberId, defaultLocationId]
+    [workspaceId, memberId, defaultLocationId, role]
   );
 }

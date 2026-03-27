@@ -8,6 +8,7 @@ import {
   SlidersHorizontal,
   Smartphone,
   Boxes,
+  UserRound,
 } from "lucide-react";import { cn } from "../../lib/utils";
 
 const navItems = [
@@ -17,8 +18,13 @@ const navItems = [
     icon: LayoutDashboard,
   },
   {
+  to: "/owner",
+  label: "Owner",
+  icon: UserRound,
+},
+  {
     to: "/ops",
-    label: "Ops",
+    label: "Ops Home",
     icon: Smartphone,
   },
   {
@@ -51,9 +57,7 @@ const navItems = [
     label: "Products",
     icon: Boxes,
   },
-
 ];
-
 export function AppSidebar() {
   return (
     <aside className="hidden w-64 border-r border-gray-200 bg-white lg:block">
