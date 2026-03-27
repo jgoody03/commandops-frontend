@@ -15,54 +15,92 @@ type Props = {
   } | null;
 };
 
-function buildSummary(props: Props) {
-  const replenishmentCount = props.replenishment?.items?.length ?? 0;
-  const lowStockCount = props.lowStock?.items?.length ?? 0;
-  const topLocation = props.locations?.items?.[0] ?? null;
-  const totals = props.snapshot?.totals ?? null;
+type SummaryContent = {
+  title: string;
+  body: string;
+  ctaLabel: string;
+  ctaTo: string;
+};
 
-  if (replenishmentCount > 0) {
-    const topItem = props.replenishment?.items?.[0];
+function buildSummary({
+  snapshot,
+  replenishment,
+  lowStock,
+  locations,
+}: Props): SummaryContent {
+  const totals = snapshot?.totals;
+  const activity = snapshot?.activity;
+  const replenishmentCount = replenishment?.items?.length ?? 0;
+  const lowStockCount = totals?.lowStockProducts ?? lowStock?.items?.length ?? 0;
+  const outOfStockCount = totals?.outOfStockProducts ?? 0;
+  const totalProducts = totals?.totalProducts ?? 0;
+  const totalLocations = totals?.totalLocations ?? locations?.items?.length ?? 0;
+  const totalUnits = totals?.totalUnits ?? 0;
+  const totalActivity = activity?.totalCount ?? 0;
+
+  if (!totals) {
     return {
-      title: `${replenishmentCount} product${
-        replenishmentCount === 1 ? "" : "s"
-      } need attention.`,
-      body: topItem
-        ? `${topItem.name} is the highest-priority replenishment candidate right now.`
-        : "The system found products that need replenishment.",
-      ctaLabel: "Review replenishment",
+      title: "Command Summary",
+      body: "Loading your workspace snapshot. Once inventory data is available, this summary will explain the current store condition in plain language.",
+      ctaLabel: "Open products",
       ctaTo: "/view/products",
     };
   }
 
-  if (lowStockCount > 0) {
+  if (outOfStockCount > 0) {
     return {
-      title: `${lowStockCount} low-stock product${
+      title: "Command Summary",
+      body: `You currently have ${outOfStockCount} out-of-stock product${
+        outOfStockCount === 1 ? "" : "s"
+      } and ${lowStockCount} low-stock item${
         lowStockCount === 1 ? "" : "s"
-      } are being watched.`,
-      body: "Inventory is mostly stable, but a few SKUs are getting close enough to deserve a review.",
-      ctaLabel: "Open low-stock view",
+      }. Inventory needs attention now, especially where product is unavailable to sell.`,
+      ctaLabel: "Review out-of-stock products",
+      ctaTo: "/view/products?stockStatus=out",
+    };
+  }
+
+  if (replenishmentCount > 0 || lowStockCount > 0) {
+    return {
+      title: "Command Summary",
+      body: `Inventory is active across ${totalLocations} location${
+        totalLocations === 1 ? "" : "s"
+      } with ${totalProducts} tracked product${
+        totalProducts === 1 ? "" : "s"
+      } and ${totalUnits} total unit${
+        totalUnits === 1 ? "" : "s"
+      } on hand. Nothing appears critically broken, but ${lowStockCount} item${
+        lowStockCount === 1 ? "" : "s"
+      } are starting to need replenishment attention.`,
+      ctaLabel: "Review low-stock products",
       ctaTo: "/view/products?stockStatus=low",
     };
   }
 
-  if (topLocation) {
+  if (totalActivity === 0) {
     return {
-      title: "Inventory looks stable right now.",
-      body: `You can drill into ${topLocation.locationName} to spot-check stock positions or prepare the next move.`,
-      ctaLabel: "Open locations",
-      ctaTo: "/view",
+      title: "Command Summary",
+      body: `Inventory looks stable across ${totalLocations} location${
+        totalLocations === 1 ? "" : "s"
+      } and ${totalProducts} tracked product${
+        totalProducts === 1 ? "" : "s"
+      }. There has not been any inventory activity today, so this may be a good moment to verify counts or review location balance health.`,
+      ctaLabel: "Open count workflow",
+      ctaTo: "/ops/count",
     };
   }
 
   return {
-    title: "Your workspace is ready.",
-    body:
-      totals && totals.totalProducts > 0
-        ? "Use the dashboard to review product health, drill into locations, or jump into an ops workflow."
-        : "Start by receiving inventory or creating products so the Hub can begin surfacing operational insights.",
-    ctaLabel: totals && totals.totalProducts > 0 ? "Open products" : "Receive inventory",
-    ctaTo: totals && totals.totalProducts > 0 ? "/view/products" : "/ops/receive",
+    title: "Command Summary",
+    body: `Inventory looks stable right now. You are tracking ${totalProducts} product${
+      totalProducts === 1 ? "" : "s"
+    } across ${totalLocations} location${
+      totalLocations === 1 ? "" : "s"
+    }, with ${totalActivity} inventory activit${
+      totalActivity === 1 ? "y" : "ies"
+    } recorded today. No urgent inventory issues are rising to the top at the moment.`,
+    ctaLabel: "Open products",
+    ctaTo: "/view/products",
   };
 }
 
@@ -70,21 +108,20 @@ export default function HubAssistantSummaryStrip(props: Props) {
   const summary = buildSummary(props);
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">
-            CommandOps Insight
-          </div>
-          <div className="mt-1 text-lg font-semibold text-slate-900">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="max-w-3xl">
+          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
             {summary.title}
           </div>
-          <p className="mt-1 text-sm text-slate-600">{summary.body}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            {summary.body}
+          </p>
         </div>
 
         <Link
           to={summary.ctaTo}
-          className="inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+          className="inline-flex rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
         >
           {summary.ctaLabel}
         </Link>

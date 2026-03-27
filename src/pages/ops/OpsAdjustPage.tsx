@@ -3,108 +3,53 @@ import { useSearchParams } from "react-router-dom";
 import { OpsShell } from "@/components/layout/OpsShell";
 import AdjustEntryForm from "@/features/ops/components/AdjustEntryForm";
 import ReceiveProductCard from "@/features/ops/components/ReceiveProductCard";
-import ReceiveQuickCreatePanel from "@/features/ops/components/ReceiveQuickCreatePanel";
 import ReceiveScanPanel, {
   type ReceiveScanPanelHandle,
 } from "@/features/ops/components/ReceiveScanPanel";
+
 import {
   useAdjustInventory,
-  useQuickCreateProduct,
   useResolveScanCode,
 } from "@/features/ops/hooks";
-import type {
-  ReceiveFlowStatus,
-  ReceiveLocationOption,
-  ResolvedProductSummary,
-} from "@/features/ops/types";
+
 import { useLocationOptions } from "@/features/locations/hooks/useLocationOptions";
 import { useWorkspaceContext } from "@/features/workspace/hooks/useWorkspaceContext";
-
-type QuickCreateFormState = {
-  name: string;
-  sku: string;
-};
-
-function buildSuggestedSku(value: string) {
-  return value
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 32);
-}
 
 export default function OpsAdjustPage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
   const [searchParams] = useSearchParams();
   const scanPanelRef = useRef<ReceiveScanPanelHandle | null>(null);
+
   const preferredLocationId = searchParams.get("locationId") || undefined;
 
-  const {
-    data: locationOptionsData,
-    loading: isLocationsLoading,
-    error: locationError,
-  } = useLocationOptions();
+  const { data: locationOptionsData } = useLocationOptions();
 
   const resolveScanMutation = useResolveScanCode();
-  const quickCreateMutation = useQuickCreateProduct();
   const adjustInventoryMutation = useAdjustInventory();
 
-  const [status, setStatus] = useState<ReceiveFlowStatus>("idle");
+  const [resolvedProduct, setResolvedProduct] = useState<any>(null);
   const [scanCode, setScanCode] = useState("");
-  const [resolvedProduct, setResolvedProduct] =
-    useState<ResolvedProductSummary | null>(null);
-  const [showQuickCreate, setShowQuickCreate] = useState(false);
-  const [quickCreateForm, setQuickCreateForm] = useState<QuickCreateFormState>({
-    name: "",
-    sku: "",
-  });
+
+  const [suggestedLocationId, setSuggestedLocationId] =
+    useState<string | undefined>();
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [repeatMode, setRepeatMode] = useState(true);
 
-  const locations: ReceiveLocationOption[] = useMemo(() => {
-    const raw = locationOptionsData?.items ?? [];
-    return raw.map((location) => ({
-      id: location.locationId,
-      name: location.locationName,
-      code: location.locationCode,
+  const locations = useMemo(() => {
+    return (locationOptionsData?.items ?? []).map((l) => ({
+      id: l.locationId,
+      name: l.locationName,
+      code: l.locationCode,
     }));
   }, [locationOptionsData]);
 
-  useEffect(() => {
-    const productId = searchParams.get("productId");
-    const name = searchParams.get("name");
-    const sku = searchParams.get("sku");
-    const barcode = searchParams.get("barcode");
-
-    if (!productId || !name || !sku) return;
-
-    setResolvedProduct({
-      productId,
-      name,
-      sku,
-      barcode: barcode || null,
-      unitLabel: "each",
-    });
-
-    setScanCode(barcode || "");
-    setShowQuickCreate(false);
-    setSuccessMessage(null);
-    setStatus("ready");
-  }, [searchParams]);
-
   function resetFlow() {
-    setStatus("idle");
-    setScanCode("");
     setResolvedProduct(null);
-    setShowQuickCreate(false);
-    setQuickCreateForm({ name: "", sku: "" });
-    setSuccessMessage(null);
-    resolveScanMutation.reset();
-    quickCreateMutation.reset();
-    adjustInventoryMutation.reset();
+    setScanCode("");
+    setSuggestedLocationId(undefined);
 
-    window.setTimeout(() => {
+    setTimeout(() => {
       scanPanelRef.current?.clearInput();
       scanPanelRef.current?.focusInput();
     }, 0);
@@ -113,228 +58,83 @@ export default function OpsAdjustPage() {
   async function handleResolve(code: string) {
     if (!workspaceId) return;
 
-    setSuccessMessage(null);
-    setScanCode(code);
-    setResolvedProduct(null);
-    setShowQuickCreate(false);
-    resolveScanMutation.reset();
-    quickCreateMutation.reset();
-    adjustInventoryMutation.reset();
-    setStatus("resolving");
-
-    try {
-      const result = await resolveScanMutation.mutateAsync({
-        workspaceId,
-        code,
-      });
-
-      if (result.resolutionStatus === "resolved") {
-        setResolvedProduct({
-          productId: result.productId,
-          name: result.productName,
-          sku: result.sku,
-          barcode: code,
-          unitLabel: "each",
-        });
-        setShowQuickCreate(false);
-        setStatus("ready");
-        return;
-      }
-
-      setQuickCreateForm({
-        name: "",
-        sku: buildSuggestedSku(code),
-      });
-      setShowQuickCreate(true);
-      setStatus("resolved");
-    } catch {
-      setStatus("error");
-    }
-  }
-
-  async function handleQuickCreateSubmit() {
-    if (!workspaceId || !scanCode) return;
-    if (!quickCreateForm.name.trim() || !quickCreateForm.sku.trim()) return;
-
-    setSuccessMessage(null);
-    quickCreateMutation.reset();
-    setStatus("creating");
-
-    try {
-      const result = await quickCreateMutation.mutateAsync({
-        workspaceId,
-        name: quickCreateForm.name.trim(),
-        sku: quickCreateForm.sku.trim(),
-        primaryBarcode: scanCode,
-      });
-
-      setResolvedProduct({
-        productId: result.product.id,
-        name: result.product.name,
-        sku: result.product.sku,
-        barcode: result.product.primaryBarcode ?? scanCode,
-        unitLabel: result.product.unit ?? "each",
-      });
-
-      setShowQuickCreate(false);
-      setStatus("ready");
-    } catch {
-      setStatus("error");
-    }
-  }
-
-  async function handleAdjustSubmit(input: {
-    locationId: string;
-    quantity: number;
-    note: string;
-  }) {
-    if (!workspaceId || !resolvedProduct) return;
-
-    setSuccessMessage(null);
-    adjustInventoryMutation.reset();
-    setStatus("posting");
-
-    try {
-      await adjustInventoryMutation.mutateAsync({
-        workspaceId,
-        locationId: input.locationId,
-        note: input.note || undefined,
-        lines: [
-          {
-            productId: resolvedProduct.productId,
-            quantityDelta: input.quantity,
-            barcode: scanCode || undefined,
-            note: input.note || undefined,
-          },
-        ],
-      });
-
-      setSuccessMessage(
-        `Adjusted ${resolvedProduct.name} by ${
-          input.quantity > 0 ? "+" : ""
-        }${input.quantity}.`
-      );
-
-      setStatus("success");
-      setResolvedProduct(null);
-      setShowQuickCreate(false);
-      setQuickCreateForm({ name: "", sku: "" });
-      setScanCode("");
-
-      window.setTimeout(() => {
-        scanPanelRef.current?.clearInput();
-        scanPanelRef.current?.focusInput();
-      }, 0);
-    } catch {
-      setStatus("error");
-    }
-  }
-
-  function handleQuickCreateNameChange(value: string) {
-    setQuickCreateForm((prev) => {
-      const shouldUpdateSku =
-        !prev.sku || prev.sku === buildSuggestedSku(prev.name);
-
-      return {
-        name: value,
-        sku: shouldUpdateSku ? buildSuggestedSku(value) : prev.sku,
-      };
+    const result = await resolveScanMutation.mutateAsync({
+      workspaceId,
+      code,
     });
+
+    if (result.resolutionStatus === "resolved") {
+      setResolvedProduct({
+        productId: result.productId,
+        name: result.productName,
+        sku: result.sku,
+      });
+
+      // 🔥 Suggest location
+      if (!preferredLocationId) {
+        setSuggestedLocationId(
+          defaultLocationId || locations[0]?.id
+        );
+      }
+    }
   }
 
-  function handleQuickCreateSkuChange(value: string) {
-    setQuickCreateForm((prev) => ({
-      ...prev,
-      sku: value,
-    }));
+  async function handleAdjustSubmit(input: any) {
+    await adjustInventoryMutation.mutateAsync({
+      workspaceId,
+      locationId: input.locationId,
+      lines: [
+        {
+          productId: resolvedProduct.productId,
+          quantityDelta: input.quantity,
+        },
+      ],
+    });
+
+    setSuccessMessage(`Adjusted ${resolvedProduct.name}`);
+    setTimeout(() => setSuccessMessage(null), 2500);
+
+    resetFlow();
   }
-
-  const pageError =
-    resolveScanMutation.error ||
-    quickCreateMutation.error ||
-    adjustInventoryMutation.error ||
-    locationError;
-
-  const pageErrorMessage =
-    pageError instanceof Error
-      ? pageError.message
-      : pageError
-        ? "Something went wrong."
-        : null;
 
   return (
-    <OpsShell
-      title="Adjust"
-      subtitle="Scan an item, confirm the product, choose a location, then post an inventory adjustment."
-    >
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-        {successMessage ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm">
+    <OpsShell title="Adjust">
+      <div className="max-w-2xl mx-auto flex flex-col gap-4">
+
+        {successMessage && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-xl shadow-lg">
             {successMessage}
           </div>
-        ) : null}
-
-        {pageErrorMessage ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 shadow-sm">
-            {pageErrorMessage}
-          </div>
-        ) : null}
+        )}
 
         <ReceiveScanPanel
           ref={scanPanelRef}
           code={scanCode}
           onSubmit={handleResolve}
-          isLoading={resolveScanMutation.isPending}
-          disabled={
-            quickCreateMutation.isPending || adjustInventoryMutation.isPending
-          }
           autoFocus
           repeatMode={repeatMode}
           onRepeatModeChange={setRepeatMode}
         />
 
-        {resolvedProduct ? (
+        {resolvedProduct && (
           <>
-            <ReceiveProductCard
-              product={resolvedProduct}
-              scannedCode={scanCode}
-            />
+            <ReceiveProductCard product={resolvedProduct} scannedCode={scanCode} />
 
             <AdjustEntryForm
               product={resolvedProduct}
               locations={locations}
               defaultLocationId={defaultLocationId}
-              preferredLocationId={preferredLocationId}
+              preferredLocationId={
+                preferredLocationId ?? suggestedLocationId
+              }
               onSubmit={handleAdjustSubmit}
               onReset={resetFlow}
-              isSubmitting={
-                adjustInventoryMutation.isPending || isLocationsLoading
-              }
+              isSubmitting={adjustInventoryMutation.isPending}
               repeatMode={repeatMode}
               onRepeatModeChange={setRepeatMode}
             />
           </>
-        ) : null}
-
-        {showQuickCreate ? (
-          <ReceiveQuickCreatePanel
-            scanCode={scanCode}
-            name={quickCreateForm.name}
-            sku={quickCreateForm.sku}
-            isSubmitting={quickCreateMutation.isPending}
-            onNameChange={handleQuickCreateNameChange}
-            onSkuChange={handleQuickCreateSkuChange}
-            onSubmit={handleQuickCreateSubmit}
-            onCancel={resetFlow}
-          />
-        ) : null}
-
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="text-sm text-gray-600">
-            Current state:{" "}
-            <span className="font-medium text-gray-900">{status}</span>
-          </div>
-        </div>
+        )}
       </div>
     </OpsShell>
   );

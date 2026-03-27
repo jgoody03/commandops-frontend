@@ -60,15 +60,16 @@ export default function OpsReceivePage() {
     name: "",
     sku: "",
   });
+  const [suggestedLocationId, setSuggestedLocationId] =
+    useState<string | undefined>();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [repeatMode, setRepeatMode] = useState(true);
 
   const locations: ReceiveLocationOption[] = useMemo(() => {
-    const raw = locationOptionsData?.items ?? [];
-    return raw.map((location) => ({
-      id: location.locationId,
-      name: location.locationName,
-      code: location.locationCode,
+    return (locationOptionsData?.items ?? []).map((l) => ({
+      id: l.locationId,
+      name: l.locationName,
+      code: l.locationCode,
     }));
   }, [locationOptionsData]);
 
@@ -96,16 +97,18 @@ export default function OpsReceivePage() {
 
   function resetFlow() {
     setStatus("idle");
-    setScanCode("");
     setResolvedProduct(null);
+    setScanCode("");
     setShowQuickCreate(false);
     setQuickCreateForm({ name: "", sku: "" });
+    setSuggestedLocationId(undefined);
     setSuccessMessage(null);
+
     resolveScanMutation.reset();
     quickCreateMutation.reset();
     receiveInventoryMutation.reset();
 
-    window.setTimeout(() => {
+    setTimeout(() => {
       scanPanelRef.current?.clearInput();
       scanPanelRef.current?.focusInput();
     }, 0);
@@ -118,9 +121,12 @@ export default function OpsReceivePage() {
     setScanCode(code);
     setResolvedProduct(null);
     setShowQuickCreate(false);
+    setSuggestedLocationId(undefined);
+
     resolveScanMutation.reset();
     quickCreateMutation.reset();
     receiveInventoryMutation.reset();
+
     setStatus("resolving");
 
     try {
@@ -137,7 +143,11 @@ export default function OpsReceivePage() {
           barcode: code,
           unitLabel: "each",
         });
-        setShowQuickCreate(false);
+
+        if (!preferredLocationId) {
+          setSuggestedLocationId(defaultLocationId || locations[0]?.id);
+        }
+
         setStatus("ready");
         return;
       }
@@ -157,7 +167,6 @@ export default function OpsReceivePage() {
     if (!workspaceId || !scanCode) return;
     if (!quickCreateForm.name.trim() || !quickCreateForm.sku.trim()) return;
 
-    setSuccessMessage(null);
     quickCreateMutation.reset();
     setStatus("creating");
 
@@ -177,6 +186,10 @@ export default function OpsReceivePage() {
         unitLabel: result.product.unit ?? "each",
       });
 
+      if (!preferredLocationId) {
+        setSuggestedLocationId(defaultLocationId || locations[0]?.id);
+      }
+
       setShowQuickCreate(false);
       setStatus("ready");
     } catch {
@@ -190,7 +203,6 @@ export default function OpsReceivePage() {
   }) {
     if (!workspaceId || !resolvedProduct) return;
 
-    setSuccessMessage(null);
     receiveInventoryMutation.reset();
     setStatus("posting");
 
@@ -206,19 +218,16 @@ export default function OpsReceivePage() {
         ],
       });
 
-      setSuccessMessage(
-        `Received ${input.quantity} ${
-          input.quantity === 1 ? "unit" : "units"
-        } of ${resolvedProduct.name}.`
-      );
+      setSuccessMessage(`Received ${input.quantity} of ${resolvedProduct.name}`);
+      setTimeout(() => setSuccessMessage(null), 2500);
 
-      setStatus("success");
       setResolvedProduct(null);
+      setScanCode("");
       setShowQuickCreate(false);
       setQuickCreateForm({ name: "", sku: "" });
-      setScanCode("");
+      setStatus("success");
 
-      window.setTimeout(() => {
+      setTimeout(() => {
         scanPanelRef.current?.clearInput();
         scanPanelRef.current?.focusInput();
       }, 0);
@@ -260,16 +269,13 @@ export default function OpsReceivePage() {
         : null;
 
   return (
-    <OpsShell
-      title="Receive"
-      subtitle="Scan an item, confirm the product, choose a location, and post receipt."
-    >
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-        {successMessage ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm">
+    <OpsShell title="Receive">
+      <div className="max-w-2xl mx-auto flex flex-col gap-4">
+        {successMessage && (
+          <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-xl shadow-lg">
             {successMessage}
           </div>
-        ) : null}
+        )}
 
         {pageErrorMessage ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 shadow-sm">
@@ -301,7 +307,7 @@ export default function OpsReceivePage() {
               product={resolvedProduct}
               locations={locations}
               defaultLocationId={defaultLocationId}
-              preferredLocationId={preferredLocationId}
+              preferredLocationId={preferredLocationId ?? suggestedLocationId}
               onSubmit={handleReceiveSubmit}
               onReset={resetFlow}
               isSubmitting={

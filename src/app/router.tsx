@@ -14,6 +14,7 @@ import ViewLocationInventoryPage from "../pages/view/ViewLocationInventoryPage";
 import ViewProductDetailPage from "../pages/view/ViewProductDetailPage";
 import OwnerHomePage from "../pages/owner/OwnerHomePage";
 import RoleLandingPage from "../pages/RoleLandingPage";
+import ViewLocationsPage from "../pages/view/ViewLocationsPage";
 export const router = createBrowserRouter([
   {
     path: "/login",
@@ -103,6 +104,14 @@ export const router = createBrowserRouter([
   element: (
     <AuthGate>
       <ViewProductDetailPage />
+    </AuthGate>
+  ),
+},
+{
+  path: "/view/locations",
+  element: (
+    <AuthGate>
+      <ViewLocationsPage />
     </AuthGate>
   ),
 },
