@@ -219,7 +219,7 @@ export default function OpsReceivePage() {
       });
 
       setSuccessMessage(`Received ${input.quantity} of ${resolvedProduct.name}`);
-      setTimeout(() => setSuccessMessage(null), 2500);
+      setTimeout(() => setSuccessMessage(null), 2000);
 
       setResolvedProduct(null);
       setScanCode("");
@@ -271,11 +271,11 @@ export default function OpsReceivePage() {
   return (
     <OpsShell title="Receive">
       <div className="max-w-2xl mx-auto flex flex-col gap-4">
-        {successMessage && (
-          <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-xl shadow-lg">
+        {successMessage ? (
+          <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-gray-900 px-4 py-2 text-sm text-white shadow-lg transition-opacity duration-300">
             {successMessage}
           </div>
-        )}
+        ) : null}
 
         {pageErrorMessage ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 shadow-sm">

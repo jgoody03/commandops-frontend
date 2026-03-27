@@ -33,7 +33,7 @@ export default function ViewHomePage() {
         <div className="grid gap-4 md:grid-cols-2">
           <Link
             to="/view/products"
-            className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+            className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:shadow-md"
           >
             <div className="text-lg font-semibold text-gray-900">Products</div>
             <p className="mt-2 text-sm text-gray-600">
@@ -43,7 +43,7 @@ export default function ViewHomePage() {
 
           <Link
             to="/view/locations"
-            className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+            className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:shadow-md"
           >
             <div className="text-lg font-semibold text-gray-900">Locations</div>
             <p className="mt-2 text-sm text-gray-600">

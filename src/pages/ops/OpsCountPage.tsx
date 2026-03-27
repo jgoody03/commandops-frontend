@@ -104,7 +104,7 @@ export default function OpsCountPage() {
     quickCreateMutation.reset();
     countInventoryMutation.reset();
 
-    window.setTimeout(() => {
+    setTimeout(() => {
       scanPanelRef.current?.clearInput();
       scanPanelRef.current?.focusInput();
     }, 0);
@@ -156,7 +156,6 @@ export default function OpsCountPage() {
     if (!workspaceId || !scanCode) return;
     if (!quickCreateForm.name.trim() || !quickCreateForm.sku.trim()) return;
 
-    setSuccessMessage(null);
     quickCreateMutation.reset();
     setStatus("creating");
 
@@ -190,7 +189,6 @@ export default function OpsCountPage() {
   }) {
     if (!workspaceId || !resolvedProduct) return;
 
-    setSuccessMessage(null);
     countInventoryMutation.reset();
     setStatus("posting");
 
@@ -214,6 +212,7 @@ export default function OpsCountPage() {
           ? `Count verified for ${resolvedProduct.name}. Quantity remains ${result.countedQuantity}.`
           : `Count posted for ${resolvedProduct.name}. Previous: ${result.previousQuantity}, Counted: ${result.countedQuantity}, Delta: ${deltaText}.`
       );
+      setTimeout(() => setSuccessMessage(null), 2000);
 
       setStatus("success");
       setResolvedProduct(null);
@@ -221,7 +220,7 @@ export default function OpsCountPage() {
       setQuickCreateForm({ name: "", sku: "" });
       setScanCode("");
 
-      window.setTimeout(() => {
+      setTimeout(() => {
         scanPanelRef.current?.clearInput();
         scanPanelRef.current?.focusInput();
       }, 0);
@@ -263,13 +262,10 @@ export default function OpsCountPage() {
         : null;
 
   return (
-    <OpsShell
-      title="Count"
-      subtitle="Scan an item, confirm the product, choose a location, and submit the actual counted quantity."
-    >
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <OpsShell title="Count">
+      <div className="max-w-2xl mx-auto flex flex-col gap-4">
         {successMessage ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm">
+          <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-gray-900 px-4 py-2 text-sm text-white shadow-lg transition-opacity duration-300">
             {successMessage}
           </div>
         ) : null}

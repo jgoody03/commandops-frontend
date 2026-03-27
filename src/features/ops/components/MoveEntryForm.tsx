@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { ReceiveLocationOption, ResolvedProductSummary } from "../types";
 
 type Props = {
@@ -30,6 +30,8 @@ export default function MoveEntryForm({
   isSubmitting = false,
   repeatMode = false,
 }: Props) {
+  const quantityRef = useRef<HTMLInputElement | null>(null);
+
   const resolvedDefaultLocationId = useMemo(() => {
     if (
       defaultLocationId &&
@@ -137,6 +139,13 @@ export default function MoveEntryForm({
   useEffect(() => {
     setQuantity("1");
     setNote("");
+
+    const id = window.setTimeout(() => {
+      quantityRef.current?.focus();
+      quantityRef.current?.select();
+    }, 50);
+
+    return () => window.clearTimeout(id);
   }, [product.productId]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -236,6 +245,7 @@ export default function MoveEntryForm({
             Quantity
           </label>
           <input
+            ref={quantityRef}
             type="number"
             min="1"
             step="1"
@@ -247,19 +257,21 @@ export default function MoveEntryForm({
           />
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Note
-          </label>
-          <input
-            type="text"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            disabled={isSubmitting}
-            placeholder="Optional"
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base text-gray-900 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-100"
-          />
-        </div>
+        <details className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+            Optional note
+          </summary>
+          <div className="mt-3">
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              disabled={isSubmitting}
+              placeholder="Optional"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-100"
+            />
+          </div>
+        </details>
 
         <div className="flex gap-3">
           <button
@@ -271,7 +283,7 @@ export default function MoveEntryForm({
               !targetLocationId ||
               sameLocation
             }
-            className="flex-1 rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="flex-1 rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.98] hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
           >
             {isSubmitting ? "Posting..." : "Move inventory"}
           </button>
@@ -280,7 +292,7 @@ export default function MoveEntryForm({
             type="button"
             onClick={onReset}
             disabled={isSubmitting}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition active:scale-[0.98] hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100"
           >
             Reset
           </button>

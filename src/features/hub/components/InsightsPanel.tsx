@@ -29,7 +29,7 @@ export default function InsightsPanel({ insights }: Props) {
   if (!insights.length) return null;
 
   return (
-    <div className="rounded-xl bg-white p-4 shadow">
+    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70">
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Insights</h2>
         <p className="text-sm text-slate-500">
@@ -41,17 +41,17 @@ export default function InsightsPanel({ insights }: Props) {
         {insights.map((insight) => (
           <div
             key={insight.id}
-            className={`rounded-lg border px-3 py-3 ${toneClasses(
+            className={`rounded-xl border px-4 py-3 shadow-sm transition ${toneClasses(
               insight.tone
             )}`}
           >
-            <div className="text-sm">{insight.message}</div>
+            <div className="text-sm leading-6">{insight.message}</div>
 
             {insight.actionHref ? (
               <div className="mt-2">
                 <Link
                   to={insight.actionHref}
-                  className="text-sm font-medium underline underline-offset-2"
+                  className="text-sm font-medium underline underline-offset-2 transition-opacity hover:opacity-80"
                 >
                   {insight.actionLabel ?? "Open"}
                 </Link>

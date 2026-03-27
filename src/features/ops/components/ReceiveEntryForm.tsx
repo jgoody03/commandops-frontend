@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { ReceiveLocationOption, ResolvedProductSummary } from "../types";
 
 type Props = {
@@ -26,6 +26,8 @@ export default function ReceiveEntryForm({
   isSubmitting = false,
   repeatMode = false,
 }: Props) {
+  const quantityRef = useRef<HTMLInputElement | null>(null);
+
   const initialLocationId = useMemo(() => {
     if (
       preferredLocationId &&
@@ -62,6 +64,13 @@ export default function ReceiveEntryForm({
 
   useEffect(() => {
     setQuantity("1");
+
+    const id = window.setTimeout(() => {
+      quantityRef.current?.focus();
+      quantityRef.current?.select();
+    }, 50);
+
+    return () => window.clearTimeout(id);
   }, [product.productId]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -126,6 +135,7 @@ export default function ReceiveEntryForm({
             Quantity
           </label>
           <input
+            ref={quantityRef}
             type="number"
             min="1"
             step="1"
@@ -141,7 +151,7 @@ export default function ReceiveEntryForm({
           <button
             type="submit"
             disabled={isSubmitting || !hasLocations || !locationId}
-            className="flex-1 rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="flex-1 rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.98] hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
           >
             {isSubmitting ? "Posting..." : "Receive inventory"}
           </button>
@@ -150,7 +160,7 @@ export default function ReceiveEntryForm({
             type="button"
             onClick={onReset}
             disabled={isSubmitting}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition active:scale-[0.98] hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-100"
           >
             Reset
           </button>

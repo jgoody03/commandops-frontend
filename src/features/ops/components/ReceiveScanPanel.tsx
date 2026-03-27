@@ -126,7 +126,7 @@ const ReceiveScanPanel = forwardRef<ReceiveScanPanelHandle, Props>(
             onChange={(e) => onRepeatModeChange?.(e.target.checked)}
             disabled={disabled || isLoading}
           />
-          Keep this workflow ready for the next scan
+Keep scanning
         </label>
       </div>
     );

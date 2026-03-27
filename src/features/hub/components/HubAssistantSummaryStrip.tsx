@@ -108,8 +108,8 @@ export default function HubAssistantSummaryStrip(props: Props) {
   const summary = buildSummary(props);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="max-w-3xl">
           <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
             {summary.title}
@@ -121,7 +121,7 @@ export default function HubAssistantSummaryStrip(props: Props) {
 
         <Link
           to={summary.ctaTo}
-          className="inline-flex rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          className="inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition active:scale-[0.98] hover:bg-slate-100"
         >
           {summary.ctaLabel}
         </Link>
