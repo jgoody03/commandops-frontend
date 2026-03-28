@@ -15,15 +15,24 @@ import ViewProductDetailPage from "../pages/view/ViewProductDetailPage";
 import OwnerHomePage from "../pages/owner/OwnerHomePage";
 import RoleLandingPage from "../pages/RoleLandingPage";
 import ViewLocationsPage from "../pages/view/ViewLocationsPage";
+import OnboardingPage from "../pages/onboarding/OnboardingPage";
+import TabletWelcomePage from "../pages/tablet/TabletWelcomePage";
+import OpsWelcomePage from "../pages/ops/OpsWelcomePage";
+import OwnerWelcomePage from "../pages/owner/OwnerWelcomePage";
 export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
   },
+  {
+  path: "/onboarding",
+  element: <OnboardingPage />,
+},
 {
   path: "/",
   element: <RoleLandingPage />,
-},  {
+},
+  {
     path: "/hub",
     element: (
       <AuthGate>
@@ -32,14 +41,38 @@ export const router = createBrowserRouter([
     ),
   },
   {
+  path: "/tablet/welcome",
+  element: (
+    <AuthGate>
+      <TabletWelcomePage />
+    </AuthGate>
+  ),
+},
+  {
     path: "/hub/dashboard",
     element: <Navigate to="/hub" replace />,
   },
+  {
+  path: "/owner/welcome",
+  element: (
+    <AuthGate>
+      <OwnerWelcomePage />
+    </AuthGate>
+  ),
+},
   {
   path: "/owner",
   element: (
     <AuthGate>
       <OwnerHomePage />
+    </AuthGate>
+  ),
+},
+{
+  path: "/ops/welcome",
+  element: (
+    <AuthGate>
+      <OpsWelcomePage />
     </AuthGate>
   ),
 },

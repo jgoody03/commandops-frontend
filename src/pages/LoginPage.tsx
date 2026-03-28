@@ -1,14 +1,9 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { loginWithEmailPassword } from "../features/auth/authClient";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-const from = (location.state as { from?: Location })?.from?.pathname;
-
-const redirectTo = from && from !== "/login" ? from : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +17,7 @@ const redirectTo = from && from !== "/login" ? from : "/";
 
     try {
       await loginWithEmailPassword(email, password);
-navigate(redirectTo, { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to sign in");
     } finally {
@@ -35,7 +30,7 @@ navigate(redirectTo, { replace: true });
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-semibold text-gray-900">Sign in</h1>
         <p className="mt-2 text-sm text-gray-500">
-          Use your CommandOps account to continue.
+          Use your StorePilot account to continue.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">

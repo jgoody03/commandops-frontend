@@ -10,7 +10,10 @@ export type ReplenishmentReasonCode =
 export type ReplenishmentAction = "receive" | "move" | "review";
 
 export type ReplenishmentUrgencyLabel = "critical" | "high" | "medium";
-
+export type GetReplenishmentRecommendationsInput = {
+  workspaceId: string;
+  limit?: number;
+};
 export type ReplenishmentItem = {
   id: string;
   workspaceId: string;
@@ -36,7 +39,9 @@ export type ReplenishmentItem = {
   suggestedQuantity: number | null;
   reasonCodes: ReplenishmentReasonCode[];
 };
-
+export type GetReplenishmentRecommendationsOutput = {
+  items: ReplenishmentItem[];
+};
 export type GetReplenishmentRecommendationsRequest = {
   workspaceId: string;
   limit?: number;

@@ -172,6 +172,14 @@ export default function HubPage() {
 
   return (
     <PageShell>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+  <h1 className="text-2xl font-semibold text-slate-900">
+    Store Command Center
+  </h1>
+  <p className="mt-2 text-sm text-slate-600">
+    Monitor inventory, manage operations, and keep your store running smoothly.
+  </p>
+</div>
       <div className="space-y-6">
         <div>
           <div className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">

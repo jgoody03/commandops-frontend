@@ -14,7 +14,7 @@ function resolveRoute(role?: string, isSmallScreen?: boolean) {
       return "/ops";
 
     case "owner":
-      return "/owner";
+      return isSmallScreen ? "/owner" : "/hub";
 
     case "admin":
     case "manager":
@@ -26,7 +26,7 @@ function resolveRoute(role?: string, isSmallScreen?: boolean) {
 }
 
 function RoleLandingContent() {
-  const { workspaceId, role } = useWorkspaceContext();
+  const { workspaceId, role, onboardingCompleted } = useWorkspaceContext();
   const [isSmallScreen, setIsSmallScreen] = useState(getIsSmallScreen());
 
   useEffect(() => {
@@ -48,7 +48,41 @@ function RoleLandingContent() {
     );
   }
 
-  return <Navigate to={resolveRoute(role, isSmallScreen)} replace />;
+  if (!onboardingCompleted) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  const destination = resolveRoute(role, isSmallScreen);
+
+  const hasSeenTabletWelcome =
+    typeof window !== "undefined" &&
+    localStorage.getItem("sp_tablet_welcome_seen") === "true";
+
+  const hasSeenOpsWelcome =
+    typeof window !== "undefined" &&
+    localStorage.getItem("sp_ops_welcome_seen") === "true";
+
+  const hasSeenOwnerWelcome =
+    typeof window !== "undefined" &&
+    localStorage.getItem("sp_owner_welcome_seen") === "true";
+
+  if (!isSmallScreen && destination === "/hub" && !hasSeenTabletWelcome) {
+    return <Navigate to="/tablet/welcome" replace />;
+  }
+
+  if (
+    destination === "/ops" &&
+    !hasSeenOpsWelcome &&
+    (role === "staff" || isSmallScreen)
+  ) {
+    return <Navigate to="/ops/welcome" replace />;
+  }
+
+  if (destination === "/owner" && isSmallScreen && !hasSeenOwnerWelcome) {
+    return <Navigate to="/owner/welcome" replace />;
+  }
+
+  return <Navigate to={destination} replace />;
 }
 
 export default function RoleLandingPage() {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getMyWorkspaceContext } from "../api";
+import { getMyWorkspaceContext } from "../api/getMyWorkspaceContext";
 import type { WorkspaceRole } from "../types";
 
 export type WorkspaceContextValue = {
@@ -7,6 +7,8 @@ export type WorkspaceContextValue = {
   memberId?: string;
   defaultLocationId?: string;
   role?: WorkspaceRole;
+  onboardingCompleted: boolean;
+  onboardingStep?: string;
 };
 
 export function useWorkspaceContext(): WorkspaceContextValue {
@@ -16,6 +18,10 @@ export function useWorkspaceContext(): WorkspaceContextValue {
     undefined
   );
   const [role, setRole] = useState<WorkspaceRole | undefined>(undefined);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState<string | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -28,6 +34,8 @@ export function useWorkspaceContext(): WorkspaceContextValue {
         setMemberId(result?.memberId ?? undefined);
         setDefaultLocationId(result?.defaultLocationId ?? undefined);
         setRole(result?.role ?? undefined);
+        setOnboardingCompleted(Boolean(result?.onboarding?.completed));
+        setOnboardingStep(result?.onboarding?.step ?? "welcome");
       })
       .catch(() => {
         if (cancelled) return;
@@ -36,6 +44,8 @@ export function useWorkspaceContext(): WorkspaceContextValue {
         setMemberId(undefined);
         setDefaultLocationId(undefined);
         setRole(undefined);
+        setOnboardingCompleted(false);
+        setOnboardingStep(undefined);
       });
 
     return () => {
@@ -49,7 +59,16 @@ export function useWorkspaceContext(): WorkspaceContextValue {
       memberId,
       defaultLocationId,
       role,
+      onboardingCompleted,
+      onboardingStep,
     }),
-    [workspaceId, memberId, defaultLocationId, role]
+    [
+      workspaceId,
+      memberId,
+      defaultLocationId,
+      role,
+      onboardingCompleted,
+      onboardingStep,
+    ]
   );
 }
