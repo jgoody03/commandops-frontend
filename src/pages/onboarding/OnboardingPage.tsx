@@ -48,9 +48,9 @@ function OnboardingContent() {
       await completeOnboarding({ workspaceId });
       setStep("complete");
 
-      window.setTimeout(() => {
-        navigate("/", { replace: true });
-      }, 1100);
+window.setTimeout(() => {
+  navigate("/app", { replace: true });
+}, 1100);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to complete setup.");
       setFinishing(false);
@@ -100,19 +100,22 @@ function OnboardingContent() {
           </div>
         ) : null}
 
-        {step === "complete" ? (
-          <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">
-              ✓
-            </div>
-            <h2 className="mt-4 text-2xl font-semibold text-slate-900">
-              You’re all set
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Your store is ready. We’re taking you into StorePilot now.
-            </p>
-          </div>
-        ) : null}
+{step === "complete" ? (
+  <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">
+      ✓
+    </div>
+    <h2 className="mt-4 text-2xl font-semibold text-slate-900">
+      You’re all set
+    </h2>
+    <p className="mt-2 text-sm leading-6 text-slate-600">
+      1 location and 1 product are ready to go.
+    </p>
+    <p className="mt-2 text-sm leading-6 text-slate-500">
+      We’re taking you into StorePilot now.
+    </p>
+  </div>
+) : null}
       </div>
     </div>
   );

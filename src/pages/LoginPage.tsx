@@ -10,20 +10,20 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
+async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  setBusy(true);
+  setError("");
 
-    try {
-      await loginWithEmailPassword(email, password);
-      navigate("/", { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign in");
-    } finally {
-      setBusy(false);
-    }
+  try {
+    await loginWithEmailPassword(email, password);
+    navigate("/app", { replace: true });
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Failed to sign in");
+  } finally {
+    setBusy(false);
   }
+}
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">

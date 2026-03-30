@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import { useQuickCreateProduct } from "@/features/ops/hooks";
+import { useEffect, useMemo, useState } from "react";
+import { useQuickCreateProduct, useReceiveInventory } from "@/features/ops/hooks";
+import { useLocationOptions } from "@/features/locations/hooks/useLocationOptions";
 import { useWorkspaceContext } from "@/features/workspace/hooks/useWorkspaceContext";
 
 type Props = {
@@ -11,8 +12,8 @@ type AddedProduct = {
   id: string;
   name: string;
   sku: string;
-  primaryBarcode?: string | null;
-  unit?: string | null;
+  locationName: string;
+  quantity: number;
 };
 
 function makeSuggestedSku(name: string) {
@@ -25,24 +26,56 @@ function makeSuggestedSku(name: string) {
 }
 
 export default function StepProducts({ onBack, onNext }: Props) {
-  const { workspaceId } = useWorkspaceContext();
+  const { workspaceId, defaultLocationId } = useWorkspaceContext();
   const quickCreateProduct = useQuickCreateProduct();
+  const receiveInventory = useReceiveInventory();
+  const { data: locationOptionsData, loading: locationsLoading } =
+    useLocationOptions();
 
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
+  const [locationId, setLocationId] = useState("");
+  const [quantity, setQuantity] = useState("1");
   const [addedProducts, setAddedProducts] = useState<AddedProduct[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const locations = locationOptionsData?.items ?? [];
+
+  useEffect(() => {
+    if (!locations.length) return;
+
+    if (
+      defaultLocationId &&
+      locations.some((location) => location.locationId === defaultLocationId)
+    ) {
+      setLocationId((current) => current || defaultLocationId);
+      return;
+    }
+
+    setLocationId((current) => current || locations[0]?.locationId || "");
+  }, [locations, defaultLocationId]);
 
   const errorMessage =
     quickCreateProduct.error instanceof Error
       ? quickCreateProduct.error.message
-      : quickCreateProduct.error
-        ? "Unable to create product."
-        : null;
+      : receiveInventory.error instanceof Error
+        ? receiveInventory.error.message
+        : quickCreateProduct.error || receiveInventory.error
+          ? "Unable to add product."
+          : null;
 
   const canSave = useMemo(() => {
-    return Boolean(workspaceId && name.trim() && sku.trim());
-  }, [workspaceId, name, sku]);
+    const parsedQuantity = Number(quantity);
+
+    return Boolean(
+      workspaceId &&
+        name.trim() &&
+        sku.trim() &&
+        locationId &&
+        Number.isFinite(parsedQuantity) &&
+        parsedQuantity > 0
+    );
+  }, [workspaceId, name, sku, locationId, quantity]);
 
   function handleNameChange(value: string) {
     setName(value);
@@ -58,29 +91,55 @@ export default function StepProducts({ onBack, onNext }: Props) {
   async function handleAddProduct() {
     if (!workspaceId || !canSave) return;
 
-    const result = await quickCreateProduct.mutateAsync({
+    const parsedQuantity = Number(quantity);
+    const selectedLocation = locations.find(
+      (location) => location.locationId === locationId
+    );
+
+    if (!selectedLocation) return;
+
+    const created = await quickCreateProduct.mutateAsync({
       workspaceId,
       name: name.trim(),
       sku: sku.trim(),
     });
 
+    await receiveInventory.mutateAsync({
+      workspaceId,
+      locationId,
+      lines: [
+        {
+          productId: created.product.id,
+          quantity: parsedQuantity,
+        },
+      ],
+    });
+
     setAddedProducts((prev) => [
       ...prev,
       {
-        id: result.product.id,
-        name: result.product.name,
-        sku: result.product.sku,
-        primaryBarcode: result.product.primaryBarcode ?? null,
-        unit: result.product.unit ?? null,
+        id: created.product.id,
+        name: created.product.name,
+        sku: created.product.sku,
+        locationName: selectedLocation.locationName,
+        quantity: parsedQuantity,
       },
     ]);
 
-    setSuccessMessage(`Added ${result.product.name}.`);
+    setSuccessMessage(
+      `Added ${created.product.name} with ${parsedQuantity} starting unit${
+        parsedQuantity === 1 ? "" : "s"
+      }.`
+    );
     window.setTimeout(() => setSuccessMessage(null), 1600);
 
     setName("");
     setSku("");
+    setQuantity("1");
   }
+
+  const isSubmitting =
+    quickCreateProduct.isPending || receiveInventory.isPending;
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -93,8 +152,8 @@ export default function StepProducts({ onBack, onNext }: Props) {
       </h2>
 
       <p className="mt-2 text-sm leading-6 text-slate-600">
-        This step is optional, but adding a product now makes the system feel
-        real right away. You can always add more later.
+        Add a starter product and place beginning inventory into a location so
+        your store is ready to use right away.
       </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -128,6 +187,48 @@ export default function StepProducts({ onBack, onNext }: Props) {
               />
             </div>
 
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Location
+              </label>
+              <select
+                value={locationId}
+                onChange={(e) => setLocationId(e.target.value)}
+                disabled={locationsLoading || !locations.length}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-slate-900 disabled:opacity-60"
+              >
+                {!locations.length ? (
+                  <option value="">No locations available</option>
+                ) : null}
+                {locations.map((location) => (
+                  <option
+                    key={location.locationId}
+                    value={location.locationId}
+                  >
+                    {location.locationName}
+                    {location.locationCode
+                      ? ` (${location.locationCode})`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Starting quantity
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="1"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-slate-900"
+              />
+            </div>
+
             {errorMessage ? (
               <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                 {errorMessage}
@@ -143,10 +244,10 @@ export default function StepProducts({ onBack, onNext }: Props) {
             <button
               type="button"
               onClick={() => void handleAddProduct()}
-              disabled={!canSave || quickCreateProduct.isPending}
+              disabled={!canSave || isSubmitting}
               className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {quickCreateProduct.isPending ? "Adding..." : "Add product"}
+              {isSubmitting ? "Adding..." : "Add product"}
             </button>
           </div>
         </div>
@@ -169,13 +270,17 @@ export default function StepProducts({ onBack, onNext }: Props) {
                   <div className="mt-1 text-sm text-slate-500">
                     {product.sku}
                   </div>
+                  <div className="mt-1 text-sm text-slate-500">
+                    {product.quantity} unit{product.quantity === 1 ? "" : "s"} in{" "}
+                    {product.locationName}
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="mt-4 text-sm leading-6 text-slate-500">
-              Start with just one product to see how inventory works, or skip
-              this step and add products later from inside the app.
+              Add a starter product with beginning quantity so inventory shows
+              up immediately in your workspace.
             </div>
           )}
         </div>
