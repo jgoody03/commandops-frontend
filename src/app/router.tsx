@@ -20,12 +20,19 @@ import OpsWelcomePage from "../pages/ops/OpsWelcomePage";
 import OwnerWelcomePage from "../pages/owner/OwnerWelcomePage";
 import SignupPage from "../pages/public/SignupPage";
 import HomePage from "../pages/public/HomePage";
-
+import PricingPage from "../pages/public/PricingPage";
+import ScanLoadPage from "../pages/ops/ScanLoadPage";
+import OpsVendorReturnPage from "../pages/ops/OpsVendorReturnPage";
+import OpsCustomerReturnPage from "../pages/ops/OpsCustomerReturnPage";
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <HomePage />,
   },
+{
+  path: "/pricing",
+  element: <PricingPage />,
+},
   {
     path: "/signup",
     element: <SignupPage />,
@@ -95,6 +102,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+  path: "/ops/scan-load",
+  element: (
+    <AuthGate>
+      <ScanLoadPage />
+    </AuthGate>
+  ),
+},
+  {
     path: "/ops/receive",
     element: (
       <AuthGate>
@@ -126,6 +141,22 @@ export const router = createBrowserRouter([
       </AuthGate>
     ),
   },
+  {
+  path: "/ops/customer-return",
+  element: (
+    <AuthGate>
+      <OpsCustomerReturnPage />
+    </AuthGate>
+  ),
+},
+  {
+  path: "/ops/vendor-return",
+  element: (
+    <AuthGate>
+      <OpsVendorReturnPage />
+    </AuthGate>
+  ),
+},
   {
     path: "/view",
     element: (

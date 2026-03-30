@@ -1,14 +1,42 @@
-import { callFunction } from "@/lib/functions";
-import type {
-  AdjustInventoryRequest,
-  AdjustInventoryResponse,
-} from "../types";
+import { createCallable } from "@/lib/functions";
 
-const adjustInventoryFn = callFunction<
+export type AdjustmentReasonCode =
+  | "count_variance"
+  | "damaged"
+  | "expired"
+  | "shrink"
+  | "theft"
+  | "lost"
+  | "vendor_return"
+  | "customer_return_restock"
+  | "customer_return_damaged"
+  | "store_use"
+  | "promo"
+  | "other";
+
+export type AdjustInventoryLineInput = {
+  productId: string;
+  quantityDelta: number;
+  barcode?: string;
+  reasonCode?: AdjustmentReasonCode;
+  note?: string;
+};
+
+export type AdjustInventoryRequest = {
+  workspaceId: string;
+  locationId: string;
+  lines: AdjustInventoryLineInput[];
+};
+
+export type AdjustInventoryResponse = {
+  ok: boolean;
+  transactionId: string;
+  postedAt: string;
+  lineCount: number;
+  locationId: string;
+};
+
+export const adjustInventory = createCallable<
   AdjustInventoryRequest,
   AdjustInventoryResponse
 >("adjustInventory");
-
-export async function adjustInventory(input: AdjustInventoryRequest) {
-  return adjustInventoryFn(input);
-}

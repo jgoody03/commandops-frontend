@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { OpsShell } from "@/components/layout/OpsShell";
 import { useWorkspaceContext } from "@/features/workspace/hooks/useWorkspaceContext";
 import { useLocationOptions } from "@/features/locations/hooks/useLocationOptions";
@@ -16,20 +16,6 @@ type ResolvedProduct = {
   barcode?: string | null;
 };
 
-const adjustmentReasonOptions = [
-  { value: "count_variance", label: "Count variance" },
-  { value: "damaged", label: "Damaged" },
-  { value: "expired", label: "Expired" },
-  { value: "shrink", label: "Shrink" },
-  { value: "theft", label: "Theft" },
-  { value: "lost", label: "Lost" },
-  { value: "store_use", label: "Store use" },
-  { value: "promo", label: "Promo" },
-  { value: "other", label: "Other" },
-] as const;
-
-type AdjustmentReasonCode = (typeof adjustmentReasonOptions)[number]["value"];
-
 function makeSuggestedSku(name: string) {
   return name
     .trim()
@@ -39,7 +25,7 @@ function makeSuggestedSku(name: string) {
     .slice(0, 24);
 }
 
-export default function OpsAdjustPage() {
+export default function OpsCustomerReturnPage() {
   const { workspaceId, defaultLocationId } = useWorkspaceContext();
   const { data: locationOptionsData, loading: locationsLoading } =
     useLocationOptions();
@@ -54,9 +40,10 @@ export default function OpsAdjustPage() {
 
   const [scanCode, setScanCode] = useState("");
   const [selectedLocationId, setSelectedLocationId] = useState("");
-  const [quantityDelta, setQuantityDelta] = useState("-1");
-  const [reasonCode, setReasonCode] =
-    useState<AdjustmentReasonCode>("other");
+  const [quantity, setQuantity] = useState("1");
+  const [returnType, setReturnType] = useState<"restock" | "damaged">(
+    "restock"
+  );
   const [note, setNote] = useState("");
 
   const [resolvedProduct, setResolvedProduct] = useState<ResolvedProduct | null>(
@@ -120,8 +107,8 @@ export default function OpsAdjustPage() {
     setNotFoundCode(null);
     setNewProductName("");
     setNewProductSku("");
-    setQuantityDelta("-1");
-    setReasonCode("other");
+    setQuantity("1");
+    setReturnType("restock");
     setNote("");
 
     window.setTimeout(() => {
@@ -174,24 +161,29 @@ export default function OpsAdjustPage() {
   async function handleSubmitExisting() {
     if (!workspaceId || !selectedLocationId || !resolvedProduct) return;
 
-    const parsedDelta = Number(quantityDelta);
-    if (!Number.isFinite(parsedDelta) || parsedDelta === 0) return;
+    const parsedQuantity = Number(quantity);
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) return;
 
-    await adjustInventory.mutateAsync({
-      workspaceId,
-      locationId: selectedLocationId,
-      lines: [
-        {
-          productId: resolvedProduct.productId,
-          quantityDelta: parsedDelta,
-          reasonCode,
-          note: note.trim() || undefined,
-        },
-      ],
-    });
+    const quantityDelta =
+      returnType === "restock" ? parsedQuantity : -parsedQuantity;
 
+await adjustInventory.mutateAsync({
+  workspaceId,
+  locationId: selectedLocationId,
+  lines: [
+    {
+      productId: resolvedProduct.productId,
+      quantityDelta,
+      reasonCode:
+        returnType === "restock"
+          ? "customer_return_restock"
+          : "customer_return_damaged",
+      note: note.trim() || undefined,
+    },
+  ],
+});
     setSuccessMessage(
-      `Adjusted ${resolvedProduct.name} by ${parsedDelta > 0 ? "+" : ""}${parsedDelta} at ${
+      `Processed return: ${parsedQuantity} × ${resolvedProduct.name} (${returnType}) at ${
         selectedLocation?.locationName ?? "selected location"
       }.`
     );
@@ -202,9 +194,9 @@ export default function OpsAdjustPage() {
   async function handleCreateAndSubmit() {
     if (!workspaceId || !selectedLocationId) return;
 
-    const parsedDelta = Number(quantityDelta);
+    const parsedQuantity = Number(quantity);
     if (!newProductName.trim() || !newProductSku.trim()) return;
-    if (!Number.isFinite(parsedDelta) || parsedDelta === 0) return;
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) return;
 
     const created = await quickCreateProduct.mutateAsync({
       workspaceId,
@@ -213,21 +205,26 @@ export default function OpsAdjustPage() {
       primaryBarcode: notFoundCode || undefined,
     });
 
-    await adjustInventory.mutateAsync({
-      workspaceId,
-      locationId: selectedLocationId,
-      lines: [
-        {
-          productId: created.product.id,
-          quantityDelta: parsedDelta,
-          reasonCode,
-          note: note.trim() || undefined,
-        },
-      ],
-    });
+    const quantityDelta =
+      returnType === "restock" ? parsedQuantity : -parsedQuantity;
 
+await adjustInventory.mutateAsync({
+  workspaceId,
+  locationId: selectedLocationId,
+  lines: [
+    {
+      productId: created.product.id,
+      quantityDelta,
+      reasonCode:
+        returnType === "restock"
+          ? "customer_return_restock"
+          : "customer_return_damaged",
+      note: note.trim() || undefined,
+    },
+  ],
+});
     setSuccessMessage(
-      `Adjusted ${created.product.name} by ${parsedDelta > 0 ? "+" : ""}${parsedDelta} at ${
+      `Processed return: ${parsedQuantity} × ${created.product.name} (${returnType}) at ${
         selectedLocation?.locationName ?? "selected location"
       }.`
     );
@@ -237,14 +234,14 @@ export default function OpsAdjustPage() {
 
   return (
     <OpsShell
-      title="Adjust Inventory"
-      subtitle="Make a manual inventory correction and keep a clean audit trail."
+      title="Customer Return"
+      subtitle="Process returned inventory and keep a clear audit trail."
     >
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start gap-3">
             <div className="rounded-2xl bg-slate-100 p-3 text-slate-700">
-              <SlidersHorizontal size={20} />
+              <RotateCcw size={20} />
             </div>
 
             <div>
@@ -308,55 +305,65 @@ export default function OpsAdjustPage() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Quantity delta
+                Quantity
               </label>
               <input
                 type="number"
+                min="1"
                 step="1"
-                value={quantityDelta}
-                onChange={(e) => setQuantityDelta(e.target.value)}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900"
                 disabled={isBusy}
               />
-              <p className="mt-1 text-xs text-slate-500">
-                Use positive numbers to add stock and negative numbers to remove it.
-              </p>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Reason
-              </label>
-              <select
-                value={reasonCode}
-                onChange={(e) =>
-                  setReasonCode(e.target.value as AdjustmentReasonCode)
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900"
-                disabled={isBusy}
-              >
-                {adjustmentReasonOptions.map((reason) => (
-                  <option key={reason.value} value={reason.value}>
-                    {reason.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="mt-4">
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Return type
+            </label>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Note
-              </label>
-              <input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Optional note"
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900"
-                disabled={isBusy}
-              />
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setReturnType("restock")}
+                className={[
+                  "rounded-xl px-4 py-2 text-sm font-medium transition",
+                  returnType === "restock"
+                    ? "bg-slate-900 text-white"
+                    : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+                ].join(" ")}
+              >
+                Restock
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setReturnType("damaged")}
+                className={[
+                  "rounded-xl px-4 py-2 text-sm font-medium transition",
+                  returnType === "damaged"
+                    ? "bg-slate-900 text-white"
+                    : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+                ].join(" ")}
+              >
+                Damaged
+              </button>
             </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Note
+            </label>
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Optional note"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900"
+              disabled={isBusy}
+            />
           </div>
 
           {errorMessage ? (
@@ -389,10 +396,10 @@ export default function OpsAdjustPage() {
                 <button
                   type="button"
                   onClick={() => void handleSubmitExisting()}
-                  disabled={!selectedLocationId || isBusy || Number(quantityDelta) === 0}
+                  disabled={!selectedLocationId || isBusy || Number(quantity) <= 0}
                   className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
                 >
-                  {adjustInventory.isPending ? "Submitting..." : "Submit adjustment"}
+                  {adjustInventory.isPending ? "Submitting..." : "Process return"}
                 </button>
               </div>
             </div>
@@ -405,7 +412,7 @@ export default function OpsAdjustPage() {
               </div>
 
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Create it now so the adjustment is still recorded cleanly.
+                Create it now so the return is still recorded cleanly.
               </p>
 
               <div className="mt-4 space-y-4">
@@ -444,13 +451,13 @@ export default function OpsAdjustPage() {
                       !newProductSku.trim() ||
                       !selectedLocationId ||
                       isBusy ||
-                      Number(quantityDelta) === 0
+                      Number(quantity) <= 0
                     }
                     className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
                   >
                     {quickCreateProduct.isPending || adjustInventory.isPending
                       ? "Submitting..."
-                      : "Create and submit adjustment"}
+                      : "Create and process return"}
                   </button>
 
                   <button

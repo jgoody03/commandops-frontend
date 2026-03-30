@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthGate } from "@/features/auth/AuthGate";
 import StepWelcome from "@/features/onboarding/components/StepWelcome";
 import StepLocations from "@/features/onboarding/components/StepLocations";
@@ -7,11 +7,12 @@ import StepProducts from "@/features/onboarding/components/StepProducts";
 import { useWorkspaceContext } from "@/features/workspace/hooks/useWorkspaceContext";
 import { completeOnboarding } from "@/features/workspace/api/completeOnboarding";
 
-type Step = "welcome" | "locations" | "products" | "complete";
+type Step = "welcome" | "locations" | "products" | "scan" | "complete";
 
 function ProgressDots({ step }: { step: Step }) {
-  const steps: Step[] = ["welcome", "locations", "products"];
-  const activeIndex = steps.indexOf(step === "complete" ? "products" : step);
+  const steps: Step[] = ["welcome", "locations", "products", "scan"];
+  const activeStep = step === "complete" ? "scan" : step;
+  const activeIndex = steps.indexOf(activeStep);
 
   return (
     <div className="flex items-center justify-center gap-2">
@@ -48,9 +49,9 @@ function OnboardingContent() {
       await completeOnboarding({ workspaceId });
       setStep("complete");
 
-window.setTimeout(() => {
-  navigate("/app", { replace: true });
-}, 1100);
+      window.setTimeout(() => {
+        navigate("/app", { replace: true });
+      }, 1100);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to complete setup.");
       setFinishing(false);
@@ -95,27 +96,60 @@ window.setTimeout(() => {
           <div className={finishing ? "pointer-events-none opacity-70" : ""}>
             <StepProducts
               onBack={() => setStep("locations")}
-              onNext={handleFinish}
+              onNext={() => setStep("scan")}
             />
           </div>
         ) : null}
 
-{step === "complete" ? (
-  <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">
-      ✓
-    </div>
-    <h2 className="mt-4 text-2xl font-semibold text-slate-900">
-      You’re all set
-    </h2>
-    <p className="mt-2 text-sm leading-6 text-slate-600">
-      1 location and 1 product are ready to go.
-    </p>
-    <p className="mt-2 text-sm leading-6 text-slate-500">
-      We’re taking you into StorePilot now.
-    </p>
-  </div>
-) : null}
+        {step === "scan" ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Final step
+            </div>
+
+            <h2 className="mt-2 text-xl font-semibold text-slate-900">
+              Let’s load your inventory
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-600">
+              Start scanning products to bring your store into the system.
+            </p>
+
+            <div className="mt-5 flex gap-3">
+              <Link
+                to="/ops/scan-load"
+                className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+              >
+                Start scanning
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleFinish}
+                className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Skip for now
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {step === "complete" ? (
+          <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">
+              ✓
+            </div>
+            <h2 className="mt-4 text-2xl font-semibold text-slate-900">
+              You’re all set
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              1 location and 1 product are ready to go.
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              We’re taking you into StorePilot now.
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   );
