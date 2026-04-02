@@ -24,6 +24,7 @@ import PricingPage from "../pages/public/PricingPage";
 import ScanLoadPage from "../pages/ops/ScanLoadPage";
 import OpsVendorReturnPage from "../pages/ops/OpsVendorReturnPage";
 import OpsCustomerReturnPage from "../pages/ops/OpsCustomerReturnPage";
+import OpsReceiveHistoryPage from "@/pages/ops/OpsReceiveHistoryPage";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -117,6 +118,14 @@ export const router = createBrowserRouter([
       </AuthGate>
     ),
   },
+  {
+  path: "/ops/receives",
+  element: (
+    <AuthGate>
+      <OpsReceiveHistoryPage />
+    </AuthGate>
+  ),
+},
   {
     path: "/ops/adjust",
     element: (

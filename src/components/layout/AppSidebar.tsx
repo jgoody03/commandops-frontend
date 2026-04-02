@@ -9,6 +9,7 @@ import {
   SlidersHorizontal,
   Smartphone,
   Boxes,
+  History,
   UserRound,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -39,6 +40,11 @@ const navItems = [
     label: "Receive",
     icon: PackagePlus,
   },
+  {
+  to: "/ops/receives",
+  label: "Receives",
+  icon: History,
+},
   {
     to: "/ops/move",
     label: "Move",
