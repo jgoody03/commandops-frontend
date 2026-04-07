@@ -33,6 +33,11 @@ export type GetTodaySnapshotOutput = {
     saleCount: number;
     totalCount: number;
   };
+  sales: {
+    salesTodayCount: number;
+    unitsSoldToday: number;
+    salesTodayRevenue: number;
+  };
   recentActivity: TodaySnapshotRecentActivityItem[];
   generatedAtMs: number;
 };

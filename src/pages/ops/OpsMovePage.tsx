@@ -64,6 +64,7 @@ export default function OpsMovePage() {
     sku: "",
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [newProductPrice, setNewProductPrice] = useState("");
   const [repeatMode, setRepeatMode] = useState(true);
   const [suggestedSourceId, setSuggestedSourceId] = useState<string | undefined>();
   const [suggestedTargetId, setSuggestedTargetId] = useState<string | undefined>();
@@ -103,7 +104,8 @@ export default function OpsMovePage() {
     setScanCode("");
     setResolvedProduct(null);
     setShowQuickCreate(false);
-    setQuickCreateForm({ name: "", sku: "" });
+setQuickCreateForm({ name: "", sku: "" });
+setNewProductPrice("");
     setSuccessMessage(null);
     setSuggestedSourceId(undefined);
     setSuggestedTargetId(undefined);
@@ -196,12 +198,16 @@ export default function OpsMovePage() {
     setStatus("creating");
 
     try {
-      const result = await quickCreateMutation.mutateAsync({
-        workspaceId,
-        name: quickCreateForm.name.trim(),
-        sku: quickCreateForm.sku.trim(),
-        primaryBarcode: scanCode,
-      });
+const result = await quickCreateMutation.mutateAsync({
+  workspaceId,
+  name: quickCreateForm.name.trim(),
+  sku: quickCreateForm.sku.trim(),
+  primaryBarcode: scanCode,
+  price:
+    newProductPrice.trim() === ""
+      ? undefined
+      : Number(newProductPrice),
+});
 
       setResolvedProduct({
         productId: result.product.id,
@@ -361,17 +367,18 @@ export default function OpsMovePage() {
         ) : null}
 
         {showQuickCreate ? (
-          <ReceiveQuickCreatePanel
-            scanCode={scanCode}
-            name={quickCreateForm.name}
-            sku={quickCreateForm.sku}
-            isSubmitting={quickCreateMutation.isPending}
-            onNameChange={handleQuickCreateNameChange}
-            onSkuChange={handleQuickCreateSkuChange}
-            onSubmit={handleQuickCreateSubmit}
-            onCancel={resetFlow}
-          />
-        ) : null}
+<ReceiveQuickCreatePanel
+  scanCode={scanCode}
+  name={quickCreateForm.name}
+  sku={quickCreateForm.sku}
+  price={newProductPrice}
+  isSubmitting={quickCreateMutation.isPending}
+  onNameChange={handleQuickCreateNameChange}
+  onSkuChange={handleQuickCreateSkuChange}
+  onPriceChange={setNewProductPrice}
+  onSubmit={handleQuickCreateSubmit}
+  onCancel={resetFlow}
+/>        ) : null}
 
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="text-sm text-gray-600">

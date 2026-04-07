@@ -25,6 +25,9 @@ import ScanLoadPage from "../pages/ops/ScanLoadPage";
 import OpsVendorReturnPage from "../pages/ops/OpsVendorReturnPage";
 import OpsCustomerReturnPage from "../pages/ops/OpsCustomerReturnPage";
 import OpsReceiveHistoryPage from "@/pages/ops/OpsReceiveHistoryPage";
+import OpsVendorPage from "@/pages/ops/OpsVendorPage";
+import OpsPosPage from "@/pages/ops/OpsPosPage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -110,14 +113,14 @@ export const router = createBrowserRouter([
     </AuthGate>
   ),
 },
-  {
-    path: "/ops/receive",
-    element: (
-      <AuthGate>
-        <OpsReceivePage />
-      </AuthGate>
-    ),
-  },
+{
+  path: "/ops/receive",
+  element: (
+    <AuthGate>
+      <OpsReceivePage />
+    </AuthGate>
+  ),
+},
   {
   path: "/ops/receives",
   element: (
@@ -150,6 +153,15 @@ export const router = createBrowserRouter([
       </AuthGate>
     ),
   },
+    {
+    path: "/ops/pos",
+    element: (
+      <AuthGate>
+        <OpsPosPage />
+      </AuthGate>
+    ),
+  },
+
   {
   path: "/ops/customer-return",
   element: (
@@ -166,6 +178,15 @@ export const router = createBrowserRouter([
     </AuthGate>
   ),
 },
+  {
+  path: "/ops/vendors",
+  element: (
+    <AuthGate>
+      <OpsVendorPage />
+    </AuthGate>
+  ),
+},
+
   {
     path: "/view",
     element: (

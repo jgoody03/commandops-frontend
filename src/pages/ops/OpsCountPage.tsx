@@ -59,6 +59,7 @@ export default function OpsCountPage() {
     name: "",
     sku: "",
   });
+  const [newProductPrice, setNewProductPrice] = useState("");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [repeatMode, setRepeatMode] = useState(true);
 
@@ -98,7 +99,8 @@ export default function OpsCountPage() {
     setScanCode("");
     setResolvedProduct(null);
     setShowQuickCreate(false);
-    setQuickCreateForm({ name: "", sku: "" });
+setQuickCreateForm({ name: "", sku: "" });
+setNewProductPrice("");
     setSuccessMessage(null);
     resolveScanMutation.reset();
     quickCreateMutation.reset();
@@ -160,12 +162,16 @@ export default function OpsCountPage() {
     setStatus("creating");
 
     try {
-      const result = await quickCreateMutation.mutateAsync({
-        workspaceId,
-        name: quickCreateForm.name.trim(),
-        sku: quickCreateForm.sku.trim(),
-        primaryBarcode: scanCode,
-      });
+const result = await quickCreateMutation.mutateAsync({
+  workspaceId,
+  name: quickCreateForm.name.trim(),
+  sku: quickCreateForm.sku.trim(),
+  primaryBarcode: scanCode,
+  price:
+    newProductPrice.trim() === ""
+      ? undefined
+      : Number(newProductPrice),
+});
 
       setResolvedProduct({
         productId: result.product.id,
@@ -311,16 +317,18 @@ export default function OpsCountPage() {
         ) : null}
 
         {showQuickCreate ? (
-          <ReceiveQuickCreatePanel
-            scanCode={scanCode}
-            name={quickCreateForm.name}
-            sku={quickCreateForm.sku}
-            isSubmitting={quickCreateMutation.isPending}
-            onNameChange={handleQuickCreateNameChange}
-            onSkuChange={handleQuickCreateSkuChange}
-            onSubmit={handleQuickCreateSubmit}
-            onCancel={resetFlow}
-          />
+<ReceiveQuickCreatePanel
+  scanCode={scanCode}
+  name={quickCreateForm.name}
+  sku={quickCreateForm.sku}
+  price={newProductPrice}
+  isSubmitting={quickCreateMutation.isPending}
+  onNameChange={handleQuickCreateNameChange}
+  onSkuChange={handleQuickCreateSkuChange}
+  onPriceChange={setNewProductPrice}
+  onSubmit={handleQuickCreateSubmit}
+  onCancel={resetFlow}
+/>
         ) : null}
 
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">

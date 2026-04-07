@@ -4,6 +4,7 @@ import ProductDetailHeader from "@/features/view/components/ProductDetailHeader"
 import ProductLocationBreakdownTable from "@/features/view/components/ProductLocationBreakdownTable";
 import ProductRecentActivityList from "@/features/view/components/ProductRecentActivityList";
 import { useProductDetailSnapshot } from "@/features/view/hooks";
+import ProductBarcodeCard from "@/features/products/components/ProductBarcodeCard";
 
 export default function ViewProductDetailPage() {
   const { productId = "" } = useParams();
@@ -60,7 +61,11 @@ export default function ViewProductDetailPage() {
         ) : summary ? (
           <>
             <ProductDetailHeader summary={summary} />
-
+<ProductBarcodeCard
+  productName={summary.name ?? "Unknown product"}
+  sku={summary.sku ?? "—"}
+  barcode={summary.primaryBarcode ?? null}
+/>
             <div className="grid gap-4 md:grid-cols-5">
               <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="text-sm text-gray-500">On hand</div>

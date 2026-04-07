@@ -2,9 +2,11 @@ type Props = {
   scanCode: string;
   name: string;
   sku: string;
+  price: string;
   isSubmitting?: boolean;
   onNameChange: (value: string) => void;
   onSkuChange: (value: string) => void;
+  onPriceChange: (value: string) => void;
   onSubmit: () => void | Promise<void>;
   onCancel: () => void;
 };
@@ -13,13 +15,15 @@ export default function ReceiveQuickCreatePanel({
   scanCode,
   name,
   sku,
+  price,
   isSubmitting = false,
   onNameChange,
   onSkuChange,
+  onPriceChange,
   onSubmit,
   onCancel,
 }: Props) {
-  return (
+    return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
       <div className="mb-3">
         <h2 className="text-base font-semibold text-gray-900">
@@ -58,7 +62,21 @@ export default function ReceiveQuickCreatePanel({
             className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base text-gray-900 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-100"
           />
         </div>
-
+<div>
+  <label className="mb-1 block text-sm font-medium text-gray-700">
+    Price
+  </label>
+  <input
+    type="number"
+    step="0.01"
+    min="0"
+    value={price}
+    onChange={(e) => onPriceChange(e.target.value)}
+    disabled={isSubmitting}
+    placeholder="Example: 2.49"
+    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base text-gray-900 outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-100"
+  />
+</div>
         <div className="flex gap-3">
           <button
             type="button"

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PageShell } from "../../components/layout/PageShell";
 import { Card } from "../../components/ui/Card";
 import { LoadingState } from "../../components/ui/LoadingState";
-import { useTodaySnapshot } from "../../features/hub/hooks";
+import { useTodaySnapshot } from "../../features/hub/hooks/useTodaySnapshot";
 import { bootstrapWorkspace } from "../../features/workspace/bootstrap";
 import { useMyWorkspaceContext } from "../../features/workspace/hooks";
 import { seedDemoData } from "../../features/dev/seed";
@@ -17,6 +17,7 @@ export default function HubDashboardPage() {
   const [bootstrapError, setBootstrapError] = useState("");
   const [seeding, setSeeding] = useState(false);
   const [seedError, setSeedError] = useState("");
+  
 
   const {
     data: workspace,
@@ -28,11 +29,11 @@ export default function HubDashboardPage() {
     (workspace as { workspaceId?: string | null } | undefined)?.workspaceId ??
     undefined;
 
-  const {
-    data: snapshot,
-    isLoading: snapshotLoading,
-    error: snapshotError,
-  } = useTodaySnapshot(workspaceId);
+const {
+  data: snapshot,
+  loading: snapshotLoading,
+  error: snapshotError,
+} = useTodaySnapshot(workspaceId);
 
   async function handleBootstrap() {
     setBootstrapping(true);
@@ -184,17 +185,16 @@ export default function HubDashboardPage() {
           <LoadingState label="Loading dashboard..." />
         )}
 
-        {workspaceId && snapshotError && (
-          <Card className="text-red-600">
-            <div className="font-semibold">Failed to load dashboard data</div>
-            <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs">
-              {snapshotError instanceof Error
-                ? snapshotError.message
-                : JSON.stringify(snapshotError, null, 2)}
-            </pre>
-          </Card>
-        )}
-
+{workspaceId && !!snapshotError && (
+  <Card className="text-red-600">
+    <div className="font-semibold">Failed to load dashboard data</div>
+    <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs">
+      {snapshotError instanceof Error
+        ? snapshotError.message
+        : JSON.stringify(snapshotError, null, 2)}
+    </pre>
+  </Card>
+)}
         {workspaceId && snapshot && (
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -227,28 +227,49 @@ export default function HubDashboardPage() {
               </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <Card>
-                <div className="text-sm text-gray-500">Receipts Today</div>
-                <div className="mt-2 text-2xl font-semibold">
-                  {snapshot.activity.receiveCount}
-                </div>
-              </Card>
+<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+  <Card>
+    <div className="text-sm text-gray-500">Receipts Today</div>
+    <div className="mt-2 text-2xl font-semibold">
+      {snapshot.activity.receiveCount}
+    </div>
+  </Card>
 
-              <Card>
-                <div className="text-sm text-gray-500">Moves Today</div>
-                <div className="mt-2 text-2xl font-semibold">
-                  {snapshot.activity.moveCount}
-                </div>
-              </Card>
+  <Card>
+    <div className="text-sm text-gray-500">Moves Today</div>
+    <div className="mt-2 text-2xl font-semibold">
+      {snapshot.activity.moveCount}
+    </div>
+  </Card>
 
-              <Card>
-                <div className="text-sm text-gray-500">Adjustments Today</div>
-                <div className="mt-2 text-2xl font-semibold">
-                  {snapshot.activity.adjustCount}
-                </div>
-              </Card>
-            </div>
+  <Card>
+    <div className="text-sm text-gray-500">Adjustments Today</div>
+    <div className="mt-2 text-2xl font-semibold">
+      {snapshot.activity.adjustCount}
+    </div>
+  </Card>
+
+  <Card>
+    <div className="text-sm text-gray-500">Sales Today</div>
+    <div className="mt-2 text-2xl font-semibold">
+      ${snapshot.sales.salesTodayRevenue.toFixed(2)}
+    </div>
+  </Card>
+
+  <Card>
+    <div className="text-sm text-gray-500">Units Sold Today</div>
+    <div className="mt-2 text-2xl font-semibold">
+      {snapshot.sales.unitsSoldToday}
+    </div>
+  </Card>
+
+  <Card>
+    <div className="text-sm text-gray-500">Sale Transactions</div>
+    <div className="mt-2 text-2xl font-semibold">
+      {snapshot.sales.salesTodayCount}
+    </div>
+  </Card>
+</div>
           </div>
         )}
       </div>

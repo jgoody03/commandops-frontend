@@ -9,11 +9,12 @@ import {
   SlidersHorizontal,
   Smartphone,
   Boxes,
+  Building2,
   History,
   UserRound,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
-
+import StorePilotLogo from "@/components/branding/StorePilotLogo";
 const navItems = [
   {
     to: "/hub/dashboard",
@@ -44,6 +45,11 @@ const navItems = [
   to: "/ops/receives",
   label: "Receives",
   icon: History,
+},
+{
+  to: "/ops/vendors",
+  label: "Vendors",
+  icon: Building2,
 },
   {
     to: "/ops/move",
@@ -79,7 +85,7 @@ export function AppSidebar() {
         <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
           Modes
         </div>
-
+        <StorePilotLogo className="mb-6 h-8 w-auto" />
         <nav className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;

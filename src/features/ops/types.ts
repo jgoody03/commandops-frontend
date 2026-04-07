@@ -17,6 +17,7 @@ export type ResolveScanCodeResponse =
       productId: string;
       sku: string;
       productName: string;
+      price?: number | null;
     }
   | {
       resolutionStatus: "unresolved";
@@ -27,6 +28,7 @@ export type QuickCreateProductRequest = {
   name: string;
   sku: string;
   primaryBarcode?: string;
+  price?: number | null;
 };
 
 export type QuickCreateProductResponse = {
@@ -36,6 +38,7 @@ export type QuickCreateProductResponse = {
     sku: string;
     name: string;
     primaryBarcode?: string | null;
+    price?: number | null;
     unit?: string | null;
   };
 };
